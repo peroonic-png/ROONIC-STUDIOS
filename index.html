@@ -1,0 +1,1124 @@
+import React, { useState } from 'react';
+import { Menu, X, Download, ExternalLink, Star, User, Smartphone, Box, ChevronRight, Globe, Code, AlertTriangle, Youtube, MessageCircle, Clock, CheckCircle2, FileArchive, FileCode, Copy, Briefcase, ShieldCheck, Server, Fingerprint, Send, Mail, Scale, Wrench, Hourglass, Calendar, Layers } from 'lucide-react';
+
+// --- TRANSLATIONS ---
+// bitte nicht löschen, sonst geht nix mehr
+const translations = {
+  de: {
+    nav_home: "Startseite", nav_mc: "Minecraft",
+    nav_web: "Webseiten", nav_apps: "Apps",
+    nav_hire: "Beauftrage Mich",
+    hero_title: "Dein Code. Dein Server. Deine Vision.",
+    hero_sub: "Wir entwickeln professionelle Lösungen für Minecraft, Web und Mobile. Von peroonic für die Community.",
+    top_projects: "Unsere Top Projekte",
+    mc_title: "Roonic Resources",
+    mc_sub: "Plugins, Packs & Mehr",
+    filter_all: "Alle", filter_plugin: "Plugins",
+    filter_resourcepack: "Packs", filter_datapack: "Datapacks",
+    table_resource: "Ressource", table_category: "Kategorie",
+    table_stats: "Stats", table_action: "Aktion",
+    detail_back: "Zurück zur Übersicht", detail_download: "Jetzt Downloaden",
+    detail_overview: "Übersicht", detail_history: "Version History",
+    detail_config: "Konfiguration", detail_gallery: "Galerie",
+    detail_info: "Informationen", detail_links: "Externe Links",
+    label_author: "Autor", label_client: "Kunde",
+    label_downloads: "Downloads", label_type: "Typ",
+    label_updated: "Aktualisiert", web_title: "Web Development Portfolio",
+    web_visit: "Besuchen", app_title: "Mobile Apps",
+    app_details: "Details & Download", no_entries: "Keine Einträge gefunden.",
+    download_rp_warn: "Wichtiger Hinweis",
+    download_rp_text: "Dieses Plugin benötigt ein Resource Pack für die volle Funktionalität (besonders bei Nutzung von LuckPerms). Bitte installiere es zusätzlich.",
+    btn_download_rp: "Resource Pack herunterladen", ver_version: "Version",
+    ver_date: "Datum", ver_changelog: "Änderungen",
+    modal_title: "Download Hinweis",
+    modal_text: "Dieses Plugin benötigt zwingend das zugehörige Resource Pack, um korrekt zu funktionieren (Custom Texturen & Sounds).",
+    modal_confirm: "Verstanden & Downloaden", modal_cancel: "Abbrechen",
+    config_copy: "Kopieren", config_copied: "Kopiert!",
+    hire_title: "Projekt Anfrage",
+    hire_desc: "Fülle das Formular aus, um ein kostenloses Projekt bei Roonic Studios anzufragen. Wir melden uns schnellstmöglich bei dir.",
+    hire_q1: "Dein Discord Name", hire_q2: "Was ist dein Auftrag? (Details)",
+    hire_q3: "Wofür benötigst du das Projekt?", hire_q4: "Welcher Entwickler soll das machen?",
+    hire_q5: "Ergebnis NICHT auf dieser Seite veröffentlichen", hire_q_type: "Projekt-Kategorie",
+    hire_q_deadline: "Wann muss es fertig sein?", hire_deadline_hint: "(Deutsche Zeit, bis 23:59 Uhr)",
+    hire_coder_random: "Zufällig (Verfügbarer Dev)", hire_coder_peroonic: "peroonic (Leitung)",
+    hire_type_plugin: "Minecraft Plugin", hire_type_web: "Webseite",
+    hire_type_app: "Mobile App", hire_type_setup: "Server Konfiguration",
+    hire_type_other: "Sonstiges", hire_info_privacy_title: "🔒 Privatsphäre",
+    hire_info_privacy: "Deine Daten sind sicher. Der Source Code wird nicht ohne Absprache mit dir im Internet hochgeladen.",
+    hire_info_cost_title: "💸 Kostenlos auf Discord",
+    hire_info_cost: "Dieser Dienst ist KOSTENLOS, sofern du auf dem ROONIC STUDIO's Discord bist.",
+    hire_discord_link_text: "Discord beitreten",
+    hire_info_access_title: "🔑 Zugriff",
+    hire_info_access: "Um alles richtig testen zu können, benötige ich temporären Zugriff auf dein Panel oder deinen Server.",
+    hire_info_rights_title: "⚖️ Kommerzielle Nutzung",
+    hire_info_rights: "Sollte das Projekt für YouTube, Twitch oder kommerziell genutzt werden, verlinke bitte ROONIC STUDIO's.",
+    hire_accept: "Ich habe die Infos gelesen und akzeptiere diese Bedingungen.",
+    hire_btn_verify: "Weiter", hire_verify_title: "Menschliche Verifizierung",
+    hire_verify_btn: "Verifizieren & Absenden",
+    hire_success_title: "Gesendet!",
+    hire_success_msg: "Dein Auftrag wurde per Webhook übertragen. Wir kontaktieren dich bald über Discord.",
+    hire_contact_info: "Kontakt für Notfälle:", hire_error: "Fehler beim Senden."
+  },
+  en: {
+    // English stuff...
+    nav_home: "Home", nav_mc: "Minecraft", nav_web: "Websites",
+    nav_apps: "Apps", nav_hire: "Hire Me",
+    hero_title: "Your Code. Your Server. Your Vision.",
+    hero_sub: "We develop professional solutions for Minecraft, Web, and Mobile.",
+    top_projects: "Top Projects", mc_title: "Resources",
+    mc_sub: "Plugins & More", filter_all: "All",
+    filter_plugin: "Plugins", filter_resourcepack: "Packs",
+    filter_datapack: "Datapacks", table_resource: "Resource",
+    table_category: "Category", table_stats: "Stats",
+    table_action: "Action", detail_back: "Back",
+    detail_download: "Download", detail_overview: "Overview",
+    detail_history: "History", detail_config: "Config",
+    detail_gallery: "Gallery", detail_info: "Info",
+    detail_links: "Links", label_author: "Author",
+    label_client: "Client", label_downloads: "Downloads",
+    label_type: "Type", label_updated: "Updated",
+    web_title: "Web Portfolio", web_visit: "Visit",
+    app_title: "Apps", app_details: "Details",
+    no_entries: "None found.", download_rp_warn: "Notice",
+    download_rp_text: "Requires a resource pack.", btn_download_rp: "Download RP",
+    ver_version: "Version", ver_date: "Date",
+    ver_changelog: "Changes", modal_title: "Download",
+    modal_text: "Make sure to download the RP.", modal_confirm: "Understood",
+    modal_cancel: "Cancel", config_copy: "Copy",
+    config_copied: "Copied!", hire_title: "Request Project",
+    hire_desc: "Fill out the form to hire us. We will get back to you soon.",
+    hire_q1: "Discord Name", hire_q2: "What is your request?",
+    hire_q3: "Purpose?", hire_q4: "Developer?",
+    hire_q5: "Do not publish result", hire_q_type: "Category",
+    hire_q_deadline: "Deadline", hire_deadline_hint: "(German Time, EOD)",
+    hire_coder_random: "Random", hire_coder_peroonic: "peroonic",
+    hire_type_plugin: "Plugin", hire_type_web: "Website",
+    hire_type_app: "App", hire_type_setup: "Setup",
+    hire_type_other: "Other", hire_info_privacy_title: "🔒 Privacy",
+    hire_info_privacy: "Your data is safe with us.", hire_info_cost_title: "💸 Free",
+    hire_info_cost: "Free for Discord members.", hire_discord_link_text: "Join Discord",
+    hire_info_access_title: "🔑 Access", hire_info_access: "I need server access to test everything.",
+    hire_info_rights_title: "⚖️ Credits", hire_info_rights: "Please link Roonic Studio's if used commercially.",
+    hire_accept: "I accept the terms.", hire_btn_verify: "Next",
+    hire_verify_title: "Verification", hire_verify_btn: "Verify & Submit",
+    hire_success_title: "Success!", hire_success_msg: "Sent. We will contact you.",
+    hire_contact_info: "Emergency contact:", hire_error: "Error."
+  }
+};
+
+// --- HIRE MODAL ---
+// das ding hier macht das popup auf
+const HireModal = ({ onClose, step, data, setData, onSubmit, onVerify, onReset, isSubmitting, t }) => {
+  return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-lg animate-fade-in overflow-y-auto">
+      <div className="bg-[#1a1a1a] border border-purple-500/20 rounded-2xl max-w-2xl w-full shadow-2xl relative my-8">
+              <button onClick={onReset} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-2"><X size={20}/></button>
+          <div className="p-8">
+            {step === 1 && (
+            <>
+            <div className="flex items-center gap-3 mb-2">
+            <Briefcase className="text-purple-400" size={24}/>
+            <h2 className="text-2xl font-bold text-white">{t.hire_title}</h2>
+            </div>
+            <p className="text-gray-400 mb-6 text-sm">{t.hire_desc}</p>
+            <form onSubmit={onSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.hire_q1}</label>
+                  <input type="text" required value={data.discord} onChange={e => setData({...data, discord: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg p-3 text-white focus:border-purple-500 outline-none transition" placeholder="peroonic#0000" />
+                </div>
+                <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.hire_q_type}</label>
+                <select value={data.type} onChange={e => setData({...data, type: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg p-3 text-white focus:border-purple-500 outline-none transition">
+                <option value="Plugin">{t.hire_type_plugin}</option>
+                <option value="Website">{t.hire_type_web}</option>
+                <option value="App">{t.hire_type_app}</option>
+                <option value="Setup">{t.hire_type_setup}</option>
+                <option value="Other">{t.hire_type_other}</option>
+                </select>
+                </div>
+            </div>
+            <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.hire_q2}</label>
+                <textarea required value={data.request} onChange={e => setData({...data, request: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg p-3 text-white focus:border-purple-500 outline-none h-24 resize-none transition" placeholder="Beschreibe deinen Auftrag..."></textarea>
+            </div>
+            <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.hire_q3}</label>
+            <textarea required value={data.purpose} onChange={e => setData({...data, purpose: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg p-3 text-white focus:border-purple-500 outline-none h-20 resize-none transition" placeholder="Wofür wird das Projekt genutzt?"></textarea>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.hire_q4}</label>
+            <select value={data.coder} onChange={e => setData({...data, coder: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg p-3 text-white focus:border-purple-500 outline-none transition">
+            <option value="random">{t.hire_coder_random}</option>
+            <option value="peroonic">{t.hire_coder_peroonic}</option>
+            </select>
+            </div>
+            <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t.hire_q_deadline} <span className="text-gray-600 font-normal">{t.hire_deadline_hint}</span></label>
+            <div className="relative">
+            <input 
+              type="date" 
+              value={data.deadline} 
+              onChange={e => setData({...data, deadline: e.target.value})} 
+              className="w-full bg-[#111] border border-[#333] rounded-lg p-3 text-white focus:border-purple-500 outline-none transition appearance-none [color-scheme:dark]" 
+            />
+            <Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" size={18} />
+            </div>
+            </div>
+            </div>
+            <div className="flex items-center gap-3 bg-[#222]/50 p-3 rounded-lg border border-[#333]">
+            <input type="checkbox" id="noPublish" checked={data.noPublish} onChange={e => setData({...data, noPublish: e.target.checked})} className="w-5 h-5 accent-purple-600 rounded" />
+            <label htmlFor="noPublish" className="text-sm text-gray-300 cursor-pointer select-none">{t.hire_q5}</label>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <InfoBox title={t.hire_info_cost_title} icon={<MessageCircle size={14}/>} color="text-green-400">
+              {t.hire_info_cost} <a href="https://discord.gg/Yrg7aUaDtb" target="_blank" className="underline text-purple-400 block mt-1">{t.hire_discord_link_text}</a>
+            </InfoBox>
+            <InfoBox title={t.hire_info_privacy_title} icon={<ShieldCheck size={14}/>} color="text-purple-400">{t.hire_info_privacy}</InfoBox>
+            <InfoBox title={t.hire_info_access_title} icon={<Server size={14}/>} color="text-blue-400">{t.hire_info_access}</InfoBox>
+            <InfoBox title={t.hire_info_rights_title} icon={<Scale size={14}/>} color="text-yellow-400">{t.hire_info_rights}</InfoBox>
+            </div>
+            <div className="pt-4 border-t border-[#333] space-y-4">
+            <div className="flex items-center gap-3">
+              <input type="checkbox" id="accept" required checked={data.accepted} onChange={e => setData({...data, accepted: e.target.checked})} className="w-5 h-5 accent-purple-600 rounded" />
+              <label htmlFor="accept" className="text-sm font-bold text-white cursor-pointer select-none">{t.hire_accept}</label>
+            </div>
+            <button type="submit" disabled={!data.accepted} className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-95">{t.hire_btn_verify}</button>
+            </div>
+            </form>
+            </>
+            )}
+            {step === 2 && (
+            <div className="text-center py-10 animate-fade-in">
+              <div className="w-20 h-20 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Fingerprint size={48} className="text-purple-500 animate-pulse"/>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">{t.hire_verify_title}</h3>
+              <button onClick={onVerify} disabled={isSubmitting} className="bg-white text-black font-bold py-4 px-10 rounded-full hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all mt-6">{isSubmitting ? "..." : t.hire_verify_btn}</button>
+            </div>
+            )}
+            {step === 3 && (
+            <div className="text-center py-10 animate-fade-in">
+              <CheckCircle2 size={64} className="mx-auto text-green-500 mb-6"/>
+              <h3 className="text-2xl font-bold text-white mb-2">{t.hire_success_title}</h3>
+              <p className="text-gray-400 mb-8">{t.hire_success_msg}</p>
+              <div className="bg-[#111] border border-[#333] p-4 rounded-xl text-left inline-block">
+              <p className="text-xs font-bold text-gray-500 uppercase mb-2">{t.hire_contact_info}</p>
+              <div className="flex items-center gap-2 text-white font-mono"><Mail size={16} className="text-purple-400"/> roonicstudios@gmail.com</div>
+              </div>
+              <div className="mt-8">
+              <button onClick={onReset} className="text-gray-500 hover:text-white transition-colors text-sm underline">Zurück zur Seite</button>
+              </div>
+            </div>
+            )}
+          </div>
+      </div>
+      </div>
+  );
+};
+
+// einfach nur ne box
+const InfoBox = ({ title, icon, color, children }) => (
+  <div className="bg-[#111] p-3 rounded-lg border border-[#333]">
+      <div className={`flex items-center gap-2 font-bold text-[10px] uppercase mb-1 ${color}`}>{icon} {title}</div>
+      <p className="text-[10px] text-gray-400 leading-tight">{children}</p>
+  </div>
+);
+
+// --- MAIN HUB ---
+export default function RoonicStudio() {
+  const [activeTab, setActiveTab] = useState('home');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mcFilter, setMcFilter] = useState('all');
+  const [lang, setLang] = useState('de'); // default sprache
+  const [activeDetailTab, setActiveDetailTab] = useState('overview');
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [showHireModal, setShowHireModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // --- HIRE FORM STATES ---
+  const [hireStep, setHireStep] = useState(1);
+  const [hireData, setHireData] = useState({
+      discord: '',
+      request: '',
+      purpose: '', coder: 'random',
+      type: 'Plugin',
+      deadline: '', noPublish: false,
+      accepted: false
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const t = translations[lang];
+
+  // holt text in richtiger sprache, voll nervig die funktion
+  const getLoc = (obj) => {
+    if (!obj) return '';
+    if (typeof obj === 'string') return obj;
+    return obj[lang] || obj['de'] || '';
+  };
+
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+    setSelectedItem(null);
+    setMobileMenuOpen(false);
+    window.scrollTo(0,0);
+  };
+
+  const selectItem = (item) => {
+    setSelectedItem(item);
+    setActiveDetailTab('overview');
+    setShowDownloadModal(false);
+    window.scrollTo(0,0);
+  }
+
+  // --- DOWNLOAD LOGIC ---
+  const handleDownload = (filename) => {
+    if (!filename) return;
+    const isZip = filename.endsWith('.zip');
+    
+    // hier fake content damit es nicht abstürzt
+    const content = isZip 
+        ? "PK... (This is a dummy ZIP file for demo purposes)" 
+        : "This is a placeholder for the real JAR file.\nIn a real deployment, this would be the actual file content.";
+    const mime = isZip ? 'application/zip' : 'application/java-archive';
+
+    const blob = new Blob([content], { type: mime });
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const initiatePluginDownload = (item) => {
+    if (item.requiresResourcePack) {
+        setShowDownloadModal(true);
+    } else {
+        handleDownload(item.links.downloadFile);
+    }
+  };
+
+  const confirmPluginDownload = () => {
+    setShowDownloadModal(false);
+    if(selectedItem && selectedItem.links.downloadFile) {
+        handleDownload(selectedItem.links.downloadFile);
+    }
+  };
+
+  const copyConfig = (text) => {
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+  };
+
+  // --- HIRE FORM LOGIC ---
+  const handleHireSubmit = (e) => { e.preventDefault(); setHireStep(2); };
+
+  const handleVerification = async () => {
+      setIsSubmitting(true);
+      const webhookUrl = "https://discord.com/api/webhooks/1462470557919608956/C9Nz3h05ehBvsvPpDG9ucdYQcE3Msr9FWtVvzPTqkBFuQRvhEi0XtfDdbG9mLosgu1B3";
+      
+      let headerMentions = "@everyone";
+
+      // wenn peroonic gewählt ist, ping ihn, sonst alle
+      if (hireData.coder === 'peroonic') {
+          headerMentions = "Dev: <@1169991869464322139>";
+      }
+
+      // Deadline formatting kram für discord timestamp
+      let deadlineFormatted = "Keine";
+      if (hireData.deadline) {
+        try {
+            const date = new Date(hireData.deadline);
+            // 23:59 weil warum nicht
+            date.setHours(23, 59, 59, 0); 
+            const timestamp = Math.floor(date.getTime() / 1000);
+            deadlineFormatted = `<t:${timestamp}:R>`;
+        } catch (e) {
+            console.error("Date parse error", e);
+            deadlineFormatted = hireData.deadline; 
+        }
+      }
+
+      const payload = {
+          content: `${headerMentions}\n\n**Neuer Auftrag von:** ${hireData.discord}\n\n**Typ:** ${hireData.type}\n**Auftrag:**\n${hireData.request}\n\n**Wofür:**\n${hireData.purpose}\n\n**Deadline:** ${deadlineFormatted}\n**Dev Wunsch:** ${hireData.coder}\n**Veröffentlichen:** ${hireData.noPublish ? 'Nein' : 'Ja'}`
+      };
+
+      try {
+          const response = await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          });
+          setHireStep(3);
+      } catch (error) {
+          setHireStep(3); // auch bei error weiter, user merkt eh nix lol
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
+
+  const resetHireForm = () => {
+      setShowHireModal(false);
+      setTimeout(() => {
+          setHireStep(1);
+          setHireData({ discord: '', request: '', purpose: '', coder: 'random', type: 'Plugin', deadline: '', noPublish: false, accepted: false });
+      }, 300);
+  };
+
+  // --- DATABASE ---
+  // hier sind alle projekte drin
+const database = [
+  {
+    id: 'mc-torrap',
+    category: 'minecraft',
+    subcategory: 'Plugin',
+    title: { de: 'Erweitertes Jäger & Gejagte', en: 'Advanced Hunt & Seek' },
+    version: '1.21.11',
+    author: 'peroonic',
+    client: 'TorraP',
+    clientImage: 'https://placehold.co/100x100/333/purple?text=TP',
+    clientLinks: {
+        youtube: 'https://www.youtube.com/@TorraP_YT',
+        discord: 'https://discord.gg/nyMkw6qN'
+    },
+    shortDesc: { 
+        de: 'Vollautomatisches Manhunt/Fangen-Event Plugin mit GUI und Stats.', 
+        en: 'Fully automated Manhunt/Tag event plugin with GUI and Stats.' 
+    },
+    description: {
+        de: `
+            <h2 class="text-xl font-bold mb-2 text-purple-400">Erweitertes Jäger & Gejagte Event</h2>
+            <p class="mb-4">Verwandle deinen Server mit Erweitertes Jäger & Gejagte, einem vollautomatischen und extrem anpassbaren Manhunt/Fangen-Event-Plugin. Bestimme einen Jäger, lass die Gejagten (Runner) frei und die Verfolgungsjagd kann beginnen! Perfekt für Community-Events.</p>
+            
+            <h3 class="font-bold text-lg mt-4 mb-2">⭐ Kern-Features</h3>
+            <ul class="list-disc pl-5 mb-4 space-y-2 text-gray-300">
+                <li>🎯 <strong>Automatischer Spielablauf:</strong> Countdown, Rollenzuweisung und Game-Loop.</li>
+                <li>⚙️ <strong>Umfangreich Konfigurierbar:</strong> Spieldauer, Insta-Kill, Sounds, Nachrichten via GUI oder Config.</li>
+                <li>🗺️ <strong>Arena-Management:</strong> Grenzen, Lobby und mehrere Spawnpunkte.</li>
+                <li>📊 <strong>Statistiken & Ranglisten:</strong> Kills, Überlebenszeit, /stats und Leaderboards.</li>
+                <li>🔊 <strong>Immersives Feedback:</strong> "Herzschlag"-Sound wenn der Jäger nahe ist!</li>
+                <li>✨ <strong>Glow-Mechanik:</strong> Gejagte leuchten lassen für strategische Tiefe.</li>
+            </ul>
+
+            <h3 class="font-bold text-lg mt-4 mb-2">🚀 Einrichtungs-Kurzanleitung</h3>
+            <ol class="list-decimal pl-5 space-y-1 text-gray-300">
+                <li><strong>Grenzen:</strong> /hideandseek setpos1 & setpos2</li>
+                <li><strong>Lobby:</strong> /hideandseek setlobby</li>
+                <li><strong>Spawns:</strong> /hideandseek setspawn seeker | hider [id]</li>
+                <li><strong>Start:</strong> /hideandseek start [Spielername]</li>
+            </ol>
+        `,
+        en: `
+            <h2 class="text-xl font-bold mb-2 text-purple-400">Advanced Hunt & Seek Event</h2>
+            <p class="mb-4">Transform your server with Advanced Hunt & Seek, a fully automated and highly customizable Manhunt/Tag event plugin. Designate a hunter, set the runners loose, and let the chase begin! Perfect for community events.</p>
+            
+            <h3 class="font-bold text-lg mt-4 mb-2">⭐ Core Features</h3>
+            <ul class="list-disc pl-5 mb-4 space-y-2 text-gray-300">
+                <li>🎯 <strong>Automated Game Loop:</strong> Countdown, role assignment, and game management.</li>
+                <li>⚙️ <strong>Highly Configurable:</strong> Game duration, insta-kill, sounds, messages via GUI or config.</li>
+                <li>🗺️ <strong>Full Arena Management:</strong> Boundaries, lobby, and multiple spawn points.</li>
+                <li>📊 <strong>Stats & Leaderboards:</strong> Track kills, survival time, /stats, and leaderboards.</li>
+                <li>🔊 <strong>Immersive Feedback:</strong> Dynamic "heartbeat" sound when hunter is close!</li>
+                <li>✨ <strong>Glow Mechanic:</strong> Force runners to glow for strategic twists.</li>
+            </ul>
+
+            <h3 class="font-bold text-lg mt-4 mb-2">🚀 Quick Setup Guide</h3>
+            <ol class="list-decimal pl-5 space-y-1 text-gray-300">
+                <li><strong>Boundaries:</strong> /hideandseek setpos1 & setpos2</li>
+                <li><strong>Lobby:</strong> /hideandseek setlobby</li>
+                <li><strong>Spawns:</strong> /hideandseek setspawn seeker | hider [id]</li>
+                <li><strong>Start:</strong> /hideandseek start [PlayerName]</li>
+            </ol>
+        `
+    },
+    images: [
+        'https://i.imgur.com/Dh5KA7n.png', // THUMBNAIL
+        'https://i.imgur.com/gKoi1xb.png',
+        'https://i.imgur.com/xFymzbR.png',
+        'https://i.imgur.com/zLvrp6e.png',
+        'https://i.imgur.com/heLC6v7.png'
+    ],
+    config: `settings:
+  spawn-location:
+    world: world
+    x: -112.0
+    y: 0.0
+    z: -153.0
+  arena:
+    lobby:
+      world: world
+      x: -185.1796368423223
+      y: 131.0
+      z: 444.5832193703765
+      yaw: 9.814871
+      pitch: 29.700031
+    pos1:
+      world: world
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    pos2:
+      world: world
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    enabled: false # Set to true once pos1 and pos2 are set
+    spawns:
+      hider:
+        '1':
+          world: world
+          x: -189.18675346638912
+          y: 71.0
+          z: 542.7356916809391
+          yaw: 96.37103
+          pitch: 45.66238
+      seeker:
+        world: world
+        x: -192.54908844034696
+        y: 71.0
+        z: 542.5101109539296
+        yaw: -86.637054
+        pitch: 90.0
+  countdown-time: 120 # Seconds before game starts
+  hunter-freeze-time: 300 # Seconds
+  game-duration: 2400 # Seconds
+  insta-ban-on-death: true
+  insta-kill-on-hit: true
+  scoreboard-enabled: true
+  ban-reason:
+  - '&c&lELIMINATED!'
+  - ''
+  - '&7You have been caught by the Hunter.'
+  - '&7Thank you for playing!'
+  - ''
+  - '&eEvent: &6Hunt'
+  broadcast-death-message: '&c☠ &e%victim% &7has been eliminated by &c%killer%&7!'
+  hunter-kill-title: '&aTARGET ELIMINATED'
+  hunter-kill-subtitle: '&e+1 Catch'
+
+scoreboard:
+  lobby:
+    title: '&b&lTorraP Events'
+    lines:
+    - ''
+    - '&fCURRENT EVENT: &aHunt'
+    - '&fEVENT STARTING IN: &7%countdown%'
+    - '&fALIVE PLAYERS: &a%alive%'
+    - '&fDEAD PLAYERS: &c%dead%'
+  game:
+    title: '&b&lTorraP Events'
+    lines:
+    - ''
+    - '&fCURRENT EVENT: &aHunt'
+    - '&fTIME LEFT: &e%time%'
+    - '&fHUNTER: &c%hunter%'
+
+messages:
+  prefix: '&8[&6Hunt&8] &r'
+  game-started: '&aThe hunt has started! Run!'
+  countdown-started: '&aGame starting in %time% seconds!'
+  hunter-win: '&cThe Hunter has won!'
+  runners-win: '&aThe Runners have survived!'`,
+    downloads: 'N/A',
+    rating: 5,
+    updated: { de: 'Heute', en: 'Today' },
+    links: { 
+        downloadFile: 'torrap-event-tag-1.0-SNAPSHOT.jar',
+        resourcePackFile: 'TorraP_Hunt_Resources.zip',
+        spigot: '#random-spigot', 
+        modrinth: '#random-modrinth' 
+    },
+    versionHistory: [
+        { ver: '1.21.11', date: '10.10.2025', desc: 'Performance Updates & Bugfixes' },
+        { ver: '1.21.10', date: '05.10.2025', desc: 'Added Glow Effect duration setting' },
+        { ver: '1.21.9', date: '01.10.2025', desc: 'Fixed spawn point issue' },
+        { ver: '1.21.5', date: '20.09.2025', desc: 'GUI implementation' },
+        { ver: '1.21.0', date: '01.09.2025', desc: 'Initial Release' },
+    ],
+    requiresResourcePack: true,
+    featured: true
+  },
+  {
+    id: 'mc-itemchallenge',
+    category: 'minecraft',
+    subcategory: 'Plugin',
+    title: { de: 'Item Challenge', en: 'Item Challenge' },
+    version: '1.21.11',
+    author: 'peroonic',
+    client: 'Noone',
+    clientImage: 'https://placehold.co/100x100/333/orange?text=NO',
+    shortDesc: { 
+        de: 'Vollautomatisches Minigame: Finde das Item oder scheide aus!', 
+        en: 'Fully automated mini-game: Find the item or get eliminated!' 
+    },
+    description: {
+        de: `
+            <h2 class="text-xl font-bold mb-2 text-purple-400">Item Challenge - Finde das Item oder scheide aus!</h2>
+            <p class="mb-4">Item Challenge ist ein vollautomatisches Minigame-Plugin für Minecraft. Das Ziel ist simpel: Spieler haben eine bestimmte Zeit, um ein gesuchtes Item zu finden. Wer es nicht schafft, scheidet aus!</p>
+            
+            <h3 class="font-bold text-lg mt-4 mb-2">✨ Features</h3>
+            <ul class="list-disc pl-5 mb-4 space-y-2 text-gray-300">
+                <li>🎯 <strong>Automatischer Spielablauf:</strong> Von der Farm-Phase über die Suche bis zur Eliminierung.</li>
+                <li>🌍 <strong>Welt-Management:</strong> Setzt Welten automatisch zurück und generiert neue Seeds (Overworld, Nether, End).</li>
+                <li>💻 <strong>Admin GUI:</strong> Wähle Items und Zeiten ganz einfach über ein visuelles Menü aus.</li>
+                <li>📂 <strong>Intelligente Kategorien:</strong> Items sind in Kategorien sortiert (Baublöcke, Redstone, Kampf, etc.).</li>
+                <li>☠️ <strong>Eliminierungs-System:</strong> Verlierer landen automatisch im Spectator-Modus.</li>
+                <li>📊 <strong>Anzeige:</strong> Scoreboard, BossBars und ActionBars zeigen die Zeit an.</li>
+            </ul>
+
+            <h3 class="font-bold text-lg mt-4 mb-2">🎮 Spielablauf</h3>
+            <ol class="list-decimal pl-5 space-y-1 text-gray-300">
+                <li><strong>Lobby:</strong> Admins bereiten das Spiel vor.</li>
+                <li><strong>Farm-Phase:</strong> Spieler sammeln Ressourcen.</li>
+                <li><strong>Sammel-Phase:</strong> Finde das gesuchte Item vor Ablauf der Zeit!</li>
+                <li><strong>Eliminierung:</strong> Wer es nicht hat, fliegt raus.</li>
+            </ol>
+            
+            <div class="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded text-sm text-gray-300">
+                ⚠️ <strong>Wichtiger Hinweis:</strong> Dieses Plugin verwaltet seine eigenen Welten (challenge_world). Nutze es nicht auf Servern mit wichtigen Bauten in Welten mit diesem Namen!
+            </div>
+        `,
+        en: `
+            <h2 class="text-xl font-bold mb-2 text-purple-400">Item Challenge - Find the Item or get Eliminated!</h2>
+            <p class="mb-4">Item Challenge is a fully automated mini-game plugin for Minecraft. The goal is simple: Players have a specific amount of time to find a requested item. If they fail, they are eliminated!</p>
+            
+            <h3 class="font-bold text-lg mt-4 mb-2">✨ Features</h3>
+            <ul class="list-disc pl-5 mb-4 space-y-2 text-gray-300">
+                <li>🎯 <strong>Automated Game Loop:</strong> From farming to searching to elimination.</li>
+                <li>🌍 <strong>World Management:</strong> Automatically resets and generates new worlds for every round.</li>
+                <li>💻 <strong>Admin GUI:</strong> Easily select items and configure timers via GUI.</li>
+                <li>📂 <strong>Smart Categorization:</strong> Items sorted into categories (Building Blocks, Redstone, etc.).</li>
+                <li>☠️ <strong>Elimination System:</strong> Losers are put into Spectator Mode.</li>
+                <li>📊 <strong>Visuals:</strong> Custom Scoreboard, BossBars, and ActionBars.</li>
+            </ul>
+
+            <h3 class="font-bold text-lg mt-4 mb-2">🎮 How to Play</h3>
+            <ol class="list-decimal pl-5 space-y-1 text-gray-300">
+                <li><strong>Lobby:</strong> Admins prepare the game.</li>
+                <li><strong>Farm Phase:</strong> Players gather resources.</li>
+                <li><strong>Search Phase:</strong> Find the requested item before time runs out!</li>
+                <li><strong>Elimination:</strong> Don't have it? You're out.</li>
+            </ol>
+            
+            <div class="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded text-sm text-gray-300">
+                ⚠️ <strong>Important Note:</strong> This plugin manages its own worlds (challenge_world). Do not use on servers with important builds in worlds with these names!
+            </div>
+        `
+    },
+    config: `# Konfiguration für Item Challenge
+
+# Zeit für die Farmphase in Sekunden (Standard: 300 = 5 Minuten)
+farm-phase-time: 300
+
+# Standardzeit für die Sammelphase in Sekunden, falls nicht angegeben
+default-collect-time: 60
+
+# Nachrichten Prefix
+prefix: "§8[§bItemChallenge§8] §r"
+
+# GUI Einstellungen
+gui:
+  title-main: "§8Event Konfiguration"
+  title-category: "§8Kategorie Auswahl"
+  title-items: "§8Item Auswahl"
+  items:
+    all-items:
+      name: "§bAlle Items anzeigen"
+      material: NETHER_STAR
+    back:
+      name: "§cZurück"
+      material: BARRIER
+    next-page:
+      name: "§eVorherige Seite"
+      material: ARROW
+    previous-page:
+      name: "§eNächste Seite"
+      material: ARROW`,
+    images: [
+        'https://i.imgur.com/SdmRnMY.png',
+        'https://i.imgur.com/7LBpHGs.png',
+        'https://i.imgur.com/v0wluT1.png',
+        'https://i.imgur.com/5LGc0Om.png',
+        'https://i.imgur.com/eVe9kpi.png',
+        'https://i.imgur.com/bDX7QMJ.png',
+        'https://i.imgur.com/F4kai44.png',
+        'https://i.imgur.com/1da1NSd.png'
+    ],
+    downloads: '0',
+    rating: 5,
+    updated: { de: 'Heute', en: 'Today' },
+    links: { downloadFile: 'item-challenge-1.0-SNAPSHOT.jar' },
+    versionHistory: [
+        { ver: '1.21.11', date: '10.01.2026', desc: 'Critical bug fixes & stability' },
+        { ver: '1.21.10', date: '02.01.2026', desc: 'Performance optimization' },
+        { ver: '1.21.9', date: '20.12.2025', desc: 'Added new item categories' },
+        { ver: '1.21.6', date: '05.12.2025', desc: 'GUI improvements' },
+        { ver: '1.21.5', date: '25.11.2025', desc: 'World generation fix' },
+        { ver: '1.21.4', date: '10.11.2025', desc: 'Timer sync update' },
+        { ver: '1.21.3', date: '01.11.2025', desc: 'Spectator mode tweaks' },
+        { ver: '1.21.2', date: '20.10.2025', desc: 'Added grace period config' },
+        { ver: '1.21.1', date: '15.10.2025', desc: 'First public patch' },
+        { ver: '1.21', date: '10.10.2025', desc: 'Initial Release' }
+    ],
+    featured: true
+  },
+  // Versteckter kram hier
+  {
+    id: 'mc-1',
+    category: 'minecraft', subcategory: 'Plugin',
+    title: { de: 'RoonicCore', en: 'RoonicCore' },
+    version: '2.4.1', author: 'Hagen',
+    visible: false, // HIDDEN
+    client: 'SkyBlockDE',
+    shortDesc: { 
+        de: 'Das ultimative Verwaltungssystem für Citybuild und Freebuild Server.', 
+        en: 'The ultimate management system for Citybuild and Freebuild servers.' 
+    },
+    description: { de: '<p>RoonicCore ist die All-in-One Lösung für moderne Minecraft Netzwerke.</p>', en: '<p>RoonicCore is the all-in-one solution for modern Minecraft networks.</p>' },
+    images: ['https://placehold.co/600x300/1e293b/cbd5e1?text=Admin+Panel'],
+    downloads: '12.5k', rating: 5,
+    updated: { de: 'Gestern', en: 'Yesterday' },
+    links: { downloadFile: 'RoonicCore_v2.4.1.jar', spigot: 'https://spigotmc.org', modrinth: 'https://modrinth.com' },
+    featured: true
+  },
+  {
+    id: 'mc-2', category: 'minecraft',
+    subcategory: 'Resource Pack',
+    title: { de: 'Crystal PvP 32x', en: 'Crystal PvP 32x' },
+    version: '1.0', author: 'PixelArtByHagen',
+    visible: false, // HIDDEN
+    client: 'Public',
+    shortDesc: { 
+        de: 'FPS-freundliches PvP Pack mit klaren Inventaren.', 
+        en: 'FPS-friendly PvP pack with clear inventories.' 
+    },
+    description: { de: '<p>PvP Pack Beschreibung...</p>', en: '<p>PvP Pack Description...</p>' },
+    images: ['https://placehold.co/600x300/312e81/ffffff?text=PvP+Inventar'],
+    downloads: '5.3k', rating: 4,
+    updated: { de: 'Vor 2 Wochen', en: '2 weeks ago' },
+    links: { downloadFile: 'CrystalPvP_32x.zip', modrinth: '#' },
+    featured: true
+  },
+  {
+    id: 'web-1',
+    category: 'website',
+    title: { de: 'Clan Portal "Eagles"', en: 'Clan Portal "Eagles"' },
+    author: 'RoonicWeb', visible: false, // HIDDEN
+    client: 'Eagles Clan',
+    shortDesc: { 
+        de: 'Mitgliederbereich und News-System für einen eSports Clan.', 
+        en: 'Member area and news system for an eSports Clan.' 
+    },
+    image: 'https://placehold.co/600x400/0f172a/38bdf8?text=Clan+Webseite',
+    url: 'https://example.com',
+    featured: true
+  },
+  {
+    id: 'app-1', category: 'app',
+    title: { de: 'ServerMonitor', en: 'ServerMonitor' },
+    author: 'Hagen', visible: false, // HIDDEN
+    client: 'Roonic Internal',
+    shortDesc: { 
+        de: 'Überwache Server-Status und TPS vom Handy aus.', 
+        en: 'Monitor server status and TPS from your phone.' 
+    },
+    image: 'https://placehold.co/400x800/064e3b/6ee7b7?text=App+UI',
+    links: { downloadFile: 'ServerMonitor.apk' },
+    featured: true
+  }
+];
+
+  // Filters (ACHTUNG: visible check nicht vergessen)
+  const featuredItems = database.filter(i => i.featured && i.visible !== false).slice(0, 8);
+  const minecraftItems = database.filter(i => i.category === 'minecraft' && i.visible !== false && (mcFilter === 'all' || i.subcategory === mcFilter));
+  const websiteItems = database.filter(i => i.category === 'website' && i.visible !== false);
+  const appItems = database.filter(i => i.category === 'app' && i.visible !== false);
+
+  // --- COMPONENTS ---
+  const NavBar = () => (
+    <nav className="bg-[#1a1a1a] border-b border-[#333] sticky top-0 z-50 shadow-lg shadow-black/50">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => switchTab('home')}>
+            <div className="bg-purple-600 p-1.5 rounded-lg shadow-[0_0_10px_rgba(147,51,234,0.5)]"><Code className="text-white w-6 h-6" /></div>
+            <span className="font-bold text-xl text-white tracking-wider">ROONIC<span className="text-purple-400">STUDIO'S</span></span>
+          </div>
+
+          <div className="hidden md:flex items-center space-x-1">
+            <NavBtn label={t.nav_home} active={activeTab === 'home'} onClick={() => switchTab('home')} icon={<Box size={16}/>} />
+            <NavBtn label={t.nav_mc} active={activeTab === 'minecraft'} onClick={() => switchTab('minecraft')} icon={<Box size={16}/>} />
+            <NavBtn label={t.nav_web} active={activeTab === 'website'} onClick={() => switchTab('website')} icon={<Globe size={16}/>} />
+            <NavBtn label={t.nav_apps} active={activeTab === 'app'} onClick={() => switchTab('app')} icon={<Smartphone size={16}/>} />
+            <NavBtn label={t.nav_hire} active={false} onClick={() => setShowHireModal(true)} icon={<Briefcase size={16}/>} special />
+            
+            <div className="ml-4 pl-4 border-l border-[#333] flex gap-2">
+                <button onClick={() => setLang('de')} className={`text-xs font-bold px-2 py-1 rounded transition ${lang === 'de' ? 'bg-purple-600 text-white' : 'text-gray-500 hover:text-white'}`}>DE</button>
+                <button onClick={() => setLang('en')} className={`text-xs font-bold px-2 py-1 rounded transition ${lang === 'en' ? 'bg-purple-600 text-white' : 'text-gray-500 hover:text-white'}`}>EN</button>
+            </div>
+          </div>
+
+          <div className="md:hidden flex items-center gap-4">
+            <button onClick={() => setLang(lang === 'de' ? 'en' : 'de')} className="text-xs font-bold text-purple-400 border border-purple-400 px-2 py-1 rounded">{lang.toUpperCase()}</button>
+            <button className="text-gray-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>{mobileMenuOpen ? <X /> : <Menu />}</button>
+          </div>
+        </div>
+      </div>
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-[#222] border-t border-[#333]">
+          <MobileNavBtn label={t.nav_home} onClick={() => switchTab('home')} />
+          <MobileNavBtn label={t.nav_mc} onClick={() => switchTab('minecraft')} />
+          <MobileNavBtn label={t.nav_web} onClick={() => switchTab('website')} />
+          <MobileNavBtn label={t.nav_apps} onClick={() => switchTab('app')} />
+          <MobileNavBtn label={t.nav_hire} onClick={() => { setShowHireModal(true); setMobileMenuOpen(false); }} special />
+        </div>
+      )}
+    </nav>
+  );
+
+  const HomeTab = () => (
+    <div className="animate-fade-in">
+      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 py-16 px-4 text-center mb-10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+        <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 relative z-10">{t.hero_title}</h1>
+        <p className="text-purple-200 text-lg max-w-2xl mx-auto relative z-10">{t.hero_sub}</p>
+      </div>
+      <div className="max-w-7xl mx-auto px-4 pb-20">
+        <div className="flex items-center gap-3 mb-6">
+          <Star className="text-yellow-500 fill-yellow-500" />
+          <h2 className="text-2xl font-bold text-white">{t.top_projects}</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {featuredItems.length > 0 ? (
+            featuredItems.map((item) => (
+              <div 
+                key={item.id}
+                onClick={() => {
+                  if(item.category === 'minecraft') {
+                    switchTab('minecraft'); selectItem(item);
+                  } else if(item.category === 'website') {
+                    window.open(item.url, '_blank');
+                  } else {
+                    switchTab('app');
+                  }
+                }}
+                className="bg-[#252525] rounded-lg overflow-hidden border border-[#333] hover:border-purple-500 transition-all cursor-pointer group shadow-lg flex flex-col h-full"
+              >
+                <div className="h-40 bg-[#151515] relative overflow-hidden flex items-center justify-center">
+                   {item.images?.[0] || item.image ? (
+                     <img src={item.images?.[0] || item.image} alt={getLoc(item.title)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                   ) : (<Box className="text-gray-700 w-16 h-16" />)}
+                   <div className="absolute top-2 right-2 bg-black/70 text-xs px-2 py-1 rounded text-white border border-white/10 uppercase font-bold backdrop-blur-sm">
+                     {item.subcategory || item.category}
+                   </div>
+                </div>
+                <div className="p-4 flex flex-col flex-1">
+                  <h3 className="font-bold text-white text-lg truncate mb-1 group-hover:text-purple-400">{getLoc(item.title)}</h3>
+                  <p className="text-gray-400 text-sm line-clamp-2 mb-3 flex-1">{getLoc(item.shortDesc)}</p>
+                  <div className="flex justify-between items-center text-xs text-gray-500 border-t border-[#333] pt-3">
+                     <div className="flex items-center gap-1"><User size={12}/> {item.author}</div>
+                     <div>{item.client}</div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (<div className="col-span-4 text-center text-gray-500 py-10">{t.no_entries}</div>)}
+        </div>
+      </div>
+    </div>
+  );
+
+  const MinecraftTab = () => {
+    if (selectedItem) return <MinecraftDetail item={selectedItem} onBack={() => setSelectedItem(null)} />;
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div><h2 className="text-3xl font-bold text-white">{t.mc_title}</h2><p className="text-gray-400">{t.mc_sub}</p></div>
+          <div className="flex bg-[#252525] p-1 rounded-lg">
+            {['all', 'Plugin', 'Resource Pack', 'Datapack'].map(filter => {
+                let label = filter;
+                if(filter === 'all') label = t.filter_all;
+                if(filter === 'Plugin') label = t.filter_plugin;
+                if(filter === 'Resource Pack') label = t.filter_resourcepack;
+                if(filter === 'Datapack') label = t.filter_datapack;
+
+                return (
+                  <button key={filter} onClick={() => setMcFilter(filter)} className={`px-4 py-2 rounded text-sm font-medium transition ${mcFilter === filter ? 'bg-purple-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}>{label}</button>
+                )
+            })}
+          </div>
+        </div>
+
+        <div className="bg-[#252525] rounded-lg border border-[#333] overflow-hidden">
+          <div className="hidden md:grid grid-cols-12 gap-4 bg-[#303030] p-3 text-sm font-bold text-gray-300 border-b border-[#444]">
+            <div className="col-span-7 pl-2">{t.table_resource}</div>
+            <div className="col-span-2">{t.table_category}</div>
+            <div className="col-span-2">{t.table_stats}</div>
+            <div className="col-span-1 text-right pr-2">{t.table_action}</div>
+          </div>
+          
+          <div className="divide-y divide-[#333]">
+            {minecraftItems.map(item => (
+              <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 hover:bg-[#2a2a2a] transition items-center group">
+                <div className="col-span-1 md:col-span-7 flex gap-4 items-start md:items-center">
+                  <div className="w-12 h-12 bg-[#151515] rounded border border-[#333] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {item.images && item.images[0] ? <img src={item.images[0]} className="w-full h-full object-cover"/> : <Box className="text-purple-500" />}
+                  </div>
+                  <div>
+                    <h3 onClick={() => selectItem(item)} className="text-purple-400 font-bold text-lg cursor-pointer hover:underline decoration-purple-400">{getLoc(item.title)} <span className="text-gray-500 text-sm font-normal ml-2">{item.version}</span></h3>
+                    <p className="text-gray-400 text-sm">{getLoc(item.shortDesc)}</p>
+                    <div className="md:hidden text-xs text-gray-500 mt-1">{t.label_author}: {item.author}</div>
+                  </div>
+                </div>
+                <div className="hidden md:flex col-span-2 text-sm text-gray-300 items-center">
+                  <span className="bg-[#1a1a1a] px-2 py-1 rounded border border-[#333] text-xs font-mono">{item.subcategory}</span>
+                </div>
+                <div className="hidden md:block col-span-2 text-sm text-gray-400">
+                  <div className="flex items-center gap-1"><Download size={12}/> {item.downloads}</div>
+                  <div className="flex items-center gap-1 text-yellow-500 text-xs">
+                    {[...Array(5)].map((_,i) => <Star key={i} size={10} className={i < item.rating ? "fill-current" : "text-gray-700"} />)}
+                  </div>
+                </div>
+                <div className="col-span-1 md:col-span-1 flex justify-end">
+                   <button onClick={() => selectItem(item)} className="bg-[#333] hover:bg-purple-600 text-white p-2 rounded transition"><ChevronRight size={20} /></button>
+                </div>
+              </div>
+            ))}
+            {minecraftItems.length === 0 && <div className="p-8 text-center text-gray-500">{t.no_entries}</div>}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Detail ansicht, bitte so lassen
+  const MinecraftDetail = ({ item, onBack }) => (
+    <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in relative">
+      {showDownloadModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-[#1f1f1f] border border-purple-500/50 rounded-lg p-6 max-w-md w-full shadow-2xl shadow-purple-900/40 transform scale-100">
+                <div className="flex items-center gap-3 mb-4 text-purple-400 border-b border-[#333] pb-3">
+                    <AlertTriangle size={24} />
+                    <h3 className="text-xl font-bold text-white">{t.modal_title}</h3>
+                </div>
+                <p className="text-gray-300 mb-6 leading-relaxed">{t.modal_text}</p>
+                <div className="flex gap-3 justify-end">
+                    <button onClick={() => setShowDownloadModal(false)} className="px-4 py-2 rounded text-gray-400 hover:text-white hover:bg-[#333] transition">{t.modal_cancel}</button>
+                    <button onClick={confirmPluginDownload} className="px-4 py-2 rounded bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg shadow-purple-600/20 transition">{t.modal_confirm}</button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      <button onClick={onBack} className="text-gray-400 hover:text-white mb-4 flex items-center text-sm transition">&larr; {t.detail_back}</button>
+      <div className="bg-[#252525] border border-[#333] rounded-t-lg p-6 mb-0 flex flex-col md:flex-row gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="w-24 h-24 bg-black rounded-lg border border-purple-500/50 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-2xl relative z-10">
+             {item.images && item.images[0] ? <img src={item.images[0]} className="w-full h-full object-cover"/> : <Box className="text-purple-500 w-12 h-12" />}
+        </div>
+        <div className="flex-1 relative z-10">
+            <h1 className="text-3xl font-bold text-white mb-1">{getLoc(item.title)}</h1>
+            <p className="text-gray-400 text-lg mb-2">{getLoc(item.shortDesc)}</p>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                <span className="flex items-center gap-1"><User size={14}/> {item.author}</span>
+                <span>•</span>
+                <span className="bg-[#333] px-2 py-0.5 rounded text-xs text-gray-300 border border-[#444]">{item.version}</span>
+                <span>•</span>
+                <span>{getLoc(item.updated)}</span>
+            </div>
+        </div>
+        <div className="flex flex-col gap-2 min-w-[200px] relative z-10">
+            <button onClick={() => initiatePluginDownload(item)} className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded text-center shadow-lg hover:shadow-purple-500/20 transition flex items-center justify-center gap-2 transform active:scale-95"><Download size={18}/> {t.detail_download}</button>
+            {item.requiresResourcePack && (
+                <button onClick={() => handleDownload(item.links.resourcePackFile)} className="bg-[#333] hover:bg-[#444] text-white font-medium py-2 px-4 rounded text-center border border-yellow-600/50 text-xs flex items-center justify-center gap-2 transition"><FileArchive size={14} className="text-yellow-500"/> {t.btn_download_rp}</button>
+            )}
+        </div>
+      </div>
+      
+      <div className="bg-[#1f1f1f] border-x border-b border-[#333] px-4 py-0 mb-6 flex gap-1 overflow-x-auto sticky top-16 z-40 shadow-md">
+        <div onClick={() => setActiveDetailTab('overview')} className={`px-4 py-3 border-b-2 font-medium cursor-pointer transition ${activeDetailTab === 'overview' ? 'border-purple-500 text-white' : 'border-transparent text-gray-400 hover:text-white'}`}>{t.detail_overview}</div>
+        <div onClick={() => setActiveDetailTab('history')} className={`px-4 py-3 border-b-2 font-medium cursor-pointer transition ${activeDetailTab === 'history' ? 'border-purple-500 text-white' : 'border-transparent text-gray-400 hover:text-white'}`}>{t.detail_history}</div>
+        {item.config && <div onClick={() => setActiveDetailTab('config')} className={`px-4 py-3 border-b-2 font-medium cursor-pointer transition ${activeDetailTab === 'config' ? 'border-purple-500 text-white' : 'border-transparent text-gray-400 hover:text-white'}`}>{t.detail_config}</div>}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+            {activeDetailTab === 'overview' && (
+                <div className="animate-fade-in">
+                    {item.requiresResourcePack && (
+                        <div className="bg-yellow-900/20 border border-yellow-600/50 rounded-lg p-4 flex gap-3 items-start mb-6">
+                            <AlertTriangle className="text-yellow-500 shrink-0 mt-1" />
+                            <div>
+                                <h4 className="text-yellow-500 font-bold text-sm mb-1">{t.download_rp_warn}</h4>
+                                <p className="text-gray-300 text-sm">{t.download_rp_text}</p>
+                            </div>
+                        </div>
+                    )}
+                    <div className="bg-[#252525] border border-[#333] p-6 rounded-lg text-gray-300">
+                        <div className="prose prose-invert max-w-none prose-headings:text-purple-400 prose-a:text-purple-400 hover:prose-a:text-purple-300" dangerouslySetInnerHTML={{__html: getLoc(item.description)}} />
+                        {item.images?.length > 0 && (
+                            <div className="mt-8 space-y-4">
+                                <h3 className="font-bold text-white border-b border-[#444] pb-2">{t.detail_gallery}</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {item.images.map((img, idx) => (
+                                        <div key={idx} className="overflow-hidden rounded border border-[#444] group">
+                                            <img src={img} alt="Preview" className="w-full h-full object-cover group-hover:scale-110 transition duration-500 cursor-pointer" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            {activeDetailTab === 'history' && (
+                <div className="bg-[#252525] border border-[#333] rounded-lg overflow-hidden animate-fade-in">
+                    <div className="p-4 border-b border-[#333] bg-[#303030] grid grid-cols-12 font-bold text-sm text-gray-300">
+                        <div className="col-span-3">{t.ver_version}</div>
+                        <div className="col-span-3">{t.ver_date}</div>
+                        <div className="col-span-6">{t.ver_changelog}</div>
+                    </div>
+                    {item.versionHistory ? (
+                        <div className="divide-y divide-[#333]">
+                            {item.versionHistory.map((v, i) => (
+                                <div key={i} className="p-4 grid grid-cols-12 text-sm hover:bg-[#2a2a2a] transition items-center">
+                                    <div className="col-span-3 font-mono text-purple-400 font-bold">{v.ver}</div>
+                                    <div className="col-span-3 text-gray-400 flex items-center gap-1"><Clock size={12}/> {v.date}</div>
+                                    <div className="col-span-5 text-gray-300">{v.desc}</div>
+                                    <div className="col-span-1 flex justify-end">
+                                        <button className="text-gray-500 hover:text-white"><Download size={16}/></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-8 text-center text-gray-500">No history available.</div>
+                    )}
+                </div>
+            )}
+            {activeDetailTab === 'config' && item.config && (
+                 <div className="bg-[#252525] border border-[#333] rounded-lg overflow-hidden animate-fade-in relative group">
+                    <div className="absolute top-4 right-4 z-10">
+                        <button onClick={() => copyConfig(item.config)} className="bg-[#333] hover:bg-[#444] text-gray-300 px-3 py-1.5 rounded flex items-center gap-2 text-xs font-bold border border-[#555] shadow-lg transition">{copied ? <CheckCircle2 size={14} className="text-green-500" /> : <Copy size={14} />}{copied ? t.config_copied : t.config_copy}</button>
+                    </div>
+                    <div className="bg-[#1e1e1e] p-2 pl-4 text-xs font-mono text-gray-500 border-b border-[#333] flex items-center gap-2"><FileCode size={14} /> config.yml</div>
+                    <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-300 leading-relaxed custom-scrollbar"><code>{item.config}</code></pre>
+                 </div>
+            )}
+        </div>
+        <div className="space-y-4">
+            <div className="bg-[#252525] border border-[#333] p-4 rounded-lg">
+                <h3 className="font-bold text-white mb-3 text-sm uppercase tracking-wide border-b border-[#333] pb-2">{t.detail_info}</h3>
+                <div className="space-y-3 text-sm">
+                    <div className="flex justify-between items-center pb-2 border-b border-[#333] border-dashed">
+                        <span className="text-gray-500">{t.label_author}</span> 
+                        <span className="text-gray-300 font-medium">{item.author}</span>
+                    </div>
+                    <div className="pt-1">
+                        <span className="text-gray-500 block mb-2">{t.label_client}</span>
+                        <div className="flex items-center gap-3 bg-[#1a1a1a] p-2 rounded border border-[#333]">
+                             {item.clientImage ? <img src={item.clientImage} alt={item.client} className="w-8 h-8 rounded-full border border-purple-500/30"/> : <div className="w-8 h-8 rounded-full bg-purple-900 flex items-center justify-center text-xs font-bold">{item.client.substring(0,2)}</div>}
+                             <div className="flex-1">
+                                 <div className="font-bold text-white">{item.client}</div>
+                                 <div className="flex gap-2 mt-0.5">
+                                    {item.clientLinks?.youtube && <a href={item.clientLinks.youtube} target="_blank" className="text-gray-500 hover:text-red-500 transition"><Youtube size={14}/></a>}
+                                    {item.clientLinks?.discord && <a href={item.clientLinks.discord} target="_blank" className="text-gray-500 hover:text-indigo-400 transition"><MessageCircle size={14}/></a>}
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                    <div className="flex justify-between items-center pt-2"><span className="text-gray-500">{t.label_downloads}</span> <span className="text-gray-300">{item.downloads}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-500">{t.label_type}</span> <span className="text-purple-400 bg-purple-900/10 px-2 py-0.5 rounded border border-purple-500/20 text-xs">{item.subcategory}</span></div>
+                </div>
+            </div>
+            <div className="bg-[#252525] border border-[#333] p-4 rounded-lg">
+                <h3 className="font-bold text-white mb-3 text-sm uppercase tracking-wide border-b border-[#333] pb-2">{t.detail_links}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                    {item.links.spigot && <a href={item.links.spigot} target="_blank" className="bg-[#facc15]/5 text-[#facc15] border border-[#facc15]/20 hover:bg-[#facc15]/10 py-2 rounded text-center text-sm font-bold transition flex items-center justify-center gap-1"><Box size={14}/> SpigotMC</a>}
+                    {item.links.modrinth && <a href={item.links.modrinth} target="_blank" className="bg-[#22c55e]/5 text-[#22c55e] border border-[#22c55e]/20 hover:bg-[#22c55e]/10 py-2 rounded text-center text-sm font-bold transition flex items-center justify-center gap-1"><Box size={14}/> Modrinth</a>}
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const WebsitesTab = () => (
+    <div className="max-w-7xl mx-auto px-4 py-12 animate-fade-in">
+        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-purple-500 pl-4">{t.web_title}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {websiteItems.length > 0 ? (
+                websiteItems.map(item => (
+                    <div key={item.id} className="bg-[#252525] border border-[#333] rounded-lg overflow-hidden hover:shadow-xl hover:shadow-purple-900/10 transition group">
+                        <div className="h-48 overflow-hidden relative">
+                            <img src={item.image} alt={getLoc(item.title)} className="w-full h-full object-cover group-hover:scale-105 transition duration-500"/>
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <a href={item.url} target="_blank" rel="noreferrer" className="bg-white text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition"><ExternalLink size={16}/> {t.web_visit}</a>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-white mb-2">{getLoc(item.title)}</h3>
+                            <p className="text-gray-400 text-sm mb-4">{getLoc(item.shortDesc)}</p>
+                            <div className="text-xs text-purple-400 bg-purple-900/20 inline-block px-2 py-1 rounded border border-purple-500/20">{t.label_client}: {item.client}</div>
+                        </div>
+                    </div>
+                ))
+            ) : (
+                <div className="col-span-3 text-center text-gray-500 py-10">{t.no_entries}</div>
+            )}
+        </div>
+    </div>
+  );
+
+  const AppsTab = () => (
+    <div className="max-w-7xl mx-auto px-4 py-12 animate-fade-in">
+        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-green-500 pl-4">{t.app_title}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {appItems.length > 0 ? (
+                appItems.map(item => (
+                    <div key={item.id} className="bg-[#252525] border border-[#333] rounded-xl p-6 flex flex-col items-center text-center hover:border-green-500/50 transition">
+                        <div className="w-24 h-24 bg-gray-800 rounded-2xl mb-4 overflow-hidden shadow-lg">
+                            <img src={item.image} alt="App Icon" className="w-full h-full object-cover" />
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">{getLoc(item.title)}</h3>
+                        <p className="text-gray-400 text-sm mb-6">{getLoc(item.shortDesc)}</p>
+                        <button className="w-full bg-[#333] hover:bg-green-600 hover:text-white text-gray-300 py-2 rounded-lg font-bold transition">{t.app_details}</button>
+                    </div>
+                ))
+            ) : (
+                <div className="col-span-4 text-center text-gray-500 py-10">{t.no_entries}</div>
+            )}
+        </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#111] text-gray-200 font-sans selection:bg-purple-500 selection:text-white">
+      <NavBar />
+      {activeTab === 'home' && <HomeTab />}
+      {activeTab === 'minecraft' && <MinecraftTab />}
+      {activeTab === 'website' && <WebsitesTab />}
+      {activeTab === 'app' && <AppsTab />}
+      {showHireModal && <HireModal onClose={() => setShowHireModal(false)} step={hireStep} data={hireData} setData={setHireData} onSubmit={handleHireSubmit} onVerify={handleVerification} onReset={resetHireForm} isSubmitting={isSubmitting} t={t} />}
+      <footer className="bg-[#0f0f0f] border-t border-[#222] py-12 mt-12 text-center text-gray-500 text-sm">
+        <p className="mb-2">&copy; 2024 Roonic Studios. Made by Hagen.</p>
+        <p>Heinrich Pattberg Realschule Project.</p>
+      </footer>
+    </div>
+  );
+}
+
+// kleiner knopf
+const NavBtn = ({ label, active, onClick, icon, special }) => (
+  <button onClick={onClick} className={`px-4 py-2 rounded flex items-center gap-2 transition font-medium ${special ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-[0_0_15px_rgba(147,51,234,0.5)] border border-purple-400/30' : active ? 'text-white bg-[#333]' : 'text-gray-400 hover:text-white hover:bg-[#222]'}`}>{icon} {label}</button>
+);
+
+const MobileNavBtn = ({ label, onClick, special }) => (
+  <button onClick={onClick} className={`w-full text-left px-6 py-4 border-b border-[#333] font-bold transition ${special ? 'text-purple-400 bg-purple-900/10' : 'text-gray-300 hover:bg-[#333] hover:text-white'}`}>{label}</button>
+);
