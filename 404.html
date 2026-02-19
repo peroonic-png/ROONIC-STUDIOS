@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="de" class="dark cursor-none">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Seite nicht gefunden | Roonic Studios</title>
+
+    <!-- Scripts & Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        // GitHub Pages SPA Redirect Logic
+        // Konfiguration: 1 für User/Repo Seiten (z.B. /Roonic-studio-site)
+        var pathSegmentsToKeep = 1;
+
+        var l = window.location;
+        var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+            l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+            l.hash;
+
+        // Die Weiterleitung erfolgt verzögert, damit der User das Design sieht
+        setTimeout(function() {
+            l.replace(redirectUrl);
+        }, 3000);
+
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#151f32', 900: '#0f172a' },
+                        purple: { 400: '#8b5cf6', 500: '#a855f7', 600: '#9333ea', 900: '#581c87' },
+                        cyan: { 400: '#22d3ee', 500: '#06b6d4', 900: '#164e63' }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'blob': 'blob 7s infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            background-color: #0f172a;
+            color: #e5e7eb;
+            font-family: 'Inter', ui-sans-serif, system-ui;
+            overflow: hidden;
+        }
+
+        #cursor {
+            width: 20px; height: 20px;
+            background: rgba(168, 85, 247, 0.5);
+            border-radius: 50%;
+            position: fixed; pointer-events: none; z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+            mix-blend-mode: screen;
+        }
+        #cursor.hovered { width: 50px; height: 50px; background: rgba(168, 85, 247, 0.2); }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .bg-blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; z-index: -1; animation: blob 10s infinite alternate;
+        }
+
+        .redirect-loader {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            border-radius: 1px;
+        }
+        .redirect-loader::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; height: 100%;
+            width: 0%;
+            background: #a855f7;
+            box-shadow: 0 0 10px #a855f7;
+            animation: loading 3s linear forwards;
+        }
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center relative selection:bg-purple-500 selection:text-white">
+
+    <div id="cursor"></div>
+
+    <!-- Background Decoration -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="bg-blob bg-purple-600 w-96 h-96 top-0 -left-20"></div>
+        <div class="bg-blob bg-indigo-600 w-96 h-96 bottom-0 -right-20 animation-delay-2000"></div>
+    </div>
+
+    <!-- 404 Content -->
+    <main class="relative z-10 w-full max-w-2xl px-6">
+        <div class="glass-panel rounded-3xl p-8 md:p-12 text-center animate-fade-in relative overflow-hidden group">
+            <!-- Decorative Icon -->
+            <div class="mb-8 relative inline-flex items-center justify-center">
+                <div class="absolute inset-0 bg-purple-500 blur-2xl opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div class="relative bg-slate-900 p-6 rounded-2xl border border-purple-500/30">
+                    <i data-lucide="ghost" class="text-purple-400 w-16 h-16 animate-bounce"></i>
+                </div>
+            </div>
+
+            <h1 class="text-7xl md:text-9xl font-black text-white mb-4 tracking-tighter">404</h1>
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-4">Ups! Seite verloren gegangen.</h2>
+            <p class="text-slate-400 text-lg mb-8 max-w-md mx-auto leading-relaxed">
+                Der Pfad <code class="bg-slate-900 px-2 py-1 rounded text-purple-400 text-sm" id="display-path">/unbekannt</code> konnte nicht gefunden werden.
+            </p>
+
+            <!-- Redirect Info -->
+            <div class="space-y-4 mb-10">
+                <p class="text-xs uppercase tracking-widest text-slate-500 font-bold">Automatische Weiterleitung</p>
+                <div class="redirect-loader mx-auto max-w-xs"></div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="./" class="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition transform hover:-translate-y-1 interactable flex items-center justify-center gap-2">
+                    <i data-lucide="home" width="18"></i> Zurück zum Start
+                </a>
+                <a href="https://discord.gg/BJTfwmr7Gw" target="_blank" class="px-8 py-4 rounded-xl bg-slate-800 text-white font-bold border border-white/5 hover:bg-slate-700 transition transform hover:-translate-y-1 interactable flex items-center justify-center gap-2">
+                    <i data-lucide="message-circle" width="18"></i> Support kontaktieren
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                 <span class="font-bold text-sm text-white tracking-widest uppercase">Roonic<span class="text-purple-500">Studios</span></span>
+            </div>
+            <p class="text-slate-600 text-xs">Redirect System v2.0 &copy; 2026</p>
+        </div>
+    </main>
+
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // Display current path for user feedback
+        document.getElementById('display-path').textContent = window.location.pathname;
+
+        // Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('mouseover', e => {
+            if (e.target.closest('.interactable') || e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
+                cursor.classList.add('hovered');
+            } else {
+                cursor.classList.remove('hovered');
+            }
+        });
+    </script>
+</body>
+</html>

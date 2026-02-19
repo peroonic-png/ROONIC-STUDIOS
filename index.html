@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="de" class="dark cursor-none">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roonic Studios | Professional Development</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#151f32', 900: '#0f172a' },
+                        purple: { 400: '#8b5cf6', 500: '#a855f7', 600: '#9333ea', 900: '#581c87' },
+                        cyan: { 400: '#22d3ee', 500: '#06b6d4', 900: '#164e63' }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            background-color: #0f172a;
+            color: #e5e7eb;
+            font-family: 'Inter', ui-sans-serif, system-ui;
+            overflow-x: hidden;
+        }
+
+        #cursor {
+            width: 20px; height: 20px;
+            background: rgba(168, 85, 247, 0.5);
+            border-radius: 50%;
+            position: fixed; pointer-events: none; z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+            mix-blend-mode: screen;
+        }
+        #cursor.hovered { width: 50px; height: 50px; background: rgba(168, 85, 247, 0.2); }
+
+        #scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px; background: #a855f7; z-index: 1000; width: 0%;
+            box-shadow: 0 0 10px #a855f7;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .bg-blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; z-index: -1; animation: blob 10s infinite alternate;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1e293b; display: inline-block; }
+        .status-online { background-color: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .status-idle { background-color: #eab308; box-shadow: 0 0 8px #eab308; }
+        .status-dnd { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        .status-offline { background-color: #64748b; }
+
+        .gallery-scroll {
+            display: flex; overflow-x: auto; gap: 1rem; padding-bottom: 1rem; scroll-snap-type: x mandatory;
+        }
+        .gallery-item {
+            flex: 0 0 300px; scroll-snap-align: start; border-radius: 1rem; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .gallery-scroll::-webkit-scrollbar { height: 4px; }
+        .gallery-scroll::-webkit-scrollbar-thumb { background: #a855f7; border-radius: 10px; }
+
+        /* Support Form Specifics */
+        .input-field {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+            outline: none;
+        }
+        .drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .drop-zone.active {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            opacity: 0; visibility: hidden; transform: translateY(10px); transition: all 0.2s;
+        }
+        .group:hover .dropdown-menu {
+            opacity: 1; visibility: visible; transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative selection:bg-purple-500 selection:text-white">
+
+    <div id="cursor"></div>
+    <div id="scroll-progress"></div>
+
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="bg-blob bg-purple-600 w-96 h-96 top-0 -left-20"></div>
+        <div class="bg-blob bg-indigo-600 w-96 h-96 bottom-0 -right-20 animation-delay-2000"></div>
+    </div>
+
+    <nav class="bg-[#0f172a]/80 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-3 cursor-pointer group interactable" onclick="app.switchTab('projects')">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-purple-600 blur rounded-lg opacity-50 group-hover:opacity-100 transition"></div>
+                        <div class="bg-slate-900 relative p-2 rounded-lg border border-purple-500/30">
+                            <i data-lucide="code" class="text-purple-400 w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <span class="font-bold text-xl text-white tracking-widest uppercase">Roonic<span class="text-purple-500">Studios</span></span>
+                </div>
+
+                <div class="hidden md:flex items-center gap-6" id="desktop-nav"></div>
+
+                <div class="md:hidden flex items-center gap-4">
+                    <button class="text-gray-300 interactable" onclick="app.toggleMobileMenu()">
+                        <i data-lucide="menu" id="mobile-menu-icon" width="28"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-nav" class="hidden md:hidden bg-[#0f172a] border-t border-white/5 absolute w-full z-50"></div>
+    </nav>
+
+    <main id="app-content" class="flex-grow relative z-10 pb-20">
+    </main>
+
+    <footer class="bg-[#0b1120] border-t border-white/5 pt-16 pb-8 text-center relative z-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 mb-12 text-left">
+            <div>
+                <h4 class="font-bold text-white mb-4">Roonic Studios</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">Professional Development for Minecraft, Web & Mobile. Quality code, unique designs.</p>
+            </div>
+            <div>
+                <h4 class="font-bold text-white mb-4">Rechtliches</h4>
+                <ul class="space-y-2 text-sm text-slate-400">
+                    <li><button onclick="app.openLegalModal('impressum')" class="hover:text-purple-400 transition interactable text-left">Impressum</button></li>
+                    <li><button onclick="app.openLegalModal('datenschutz')" class="hover:text-purple-400 transition interactable text-left">Datenschutz</button></li>
+                    <li><button onclick="app.openLegalModal('agb')" class="hover:text-purple-400 transition interactable text-left">AGB</button></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white mb-4">Community</h4>
+                <div class="flex gap-4">
+                    <a href="https://discord.gg/BJTfwmr7Gw" target="_blank" class="bg-slate-800 p-2 rounded-lg hover:bg-[#5865F2] hover:text-white text-slate-400 transition interactable"><i data-lucide="message-circle" width="20"></i></a>
+                    <a href="https://github.com/peroonic-png" target="_blank" class="bg-slate-800 p-2 rounded-lg hover:bg-black hover:text-white text-slate-400 transition interactable"><i data-lucide="github" width="20"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold text-white mb-4">Discord Joinen</h4>
+                <a href="https://discord.gg/BJTfwmr7Gw" target="_blank" class="block w-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-3 px-4 rounded-lg text-center transition interactable flex items-center justify-center gap-2">
+                    <i data-lucide="message-circle" width="18"></i> Discord Beitreten
+                </a>
+            </div>
+        </div>
+        <div class="border-t border-white/5 pt-8 text-slate-600 text-sm">
+            &copy; 2026 Roonic Studios. Made with <i data-lucide="heart" width="12" class="inline text-red-500"></i> by peroonic.
+        </div>
+    </footer>
+
+    <button onclick="app.openSupportModal()" class="fixed bottom-8 right-8 z-40 group interactable">
+        <div class="absolute inset-0 bg-purple-600 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-500 animate-pulse"></div>
+        <div class="bg-white text-slate-900 p-4 rounded-full relative shadow-2xl hover:scale-110 transition duration-300">
+            <i data-lucide="life-buoy" width="24"></i>
+        </div>
+    </button>
+
+    <div id="modal-layer" class="relative z-[100]"></div>
+
+    <script>
+        const app = {
+            state: {
+                tab: 'projects',
+                lang: 'de',
+                search: '',
+                activeProject: null,
+                hireRole: 'Game Designer',
+                supportLang: 'de',
+                currentUser: null,
+                pendingAction: null,
+                isAdmin: false,
+                adminTab: 'dashboard',
+                adminSearch: ''
+            },
+
+            config: {
+                resendToken: "re_c1tpEyD8_NKFusih9vKVQknRAQfmFcWCv",
+                googleClientId: "144326913947-iu0bujnjgp4jb01th3ao89l789drd8ht.apps.googleusercontent.com"
+            },
+
+            webhooks: {
+                application: "https://discord.com/api/webhooks/1462470557919608956/C9Nz3h05ehBvsvPpDG9ucdYQcE3Msr9FWtVvzPTqkBFuQRvhEi0XtfDdbG9mLosgu1B3",
+                support: "https://discord.com/api/webhooks/1464564070094213131/RSXOKhVVusCS_DIk7kPEQps6P1meOkdhYbKC2VRaidNmx6t6alp_PlKK4tGTNvtRwOfD",
+                waitlist: "https://discord.com/api/webhooks/1464606615318564916/QLkCLIfpdk41bdwA1Hi0Tc3ZkE3130dHuvbGK5kXiuVPTmKXLgmRGHzzl1QBLiXrkDxi",
+                adminAuth: "https://discord.com/api/webhooks/1470196015738126489/-j6WlGnhf-TacrmvAzqZyjE8YQwI1hFnQnxWugfEj6F6ceuufoX2MtMw0dKzhSl7134v"
+            },
+
+            roles: {
+                "Design & Konzept": ["Game Designer", "Level Designer", "UX Designer", "UI Designer", "Content Creator"],
+                "Programmierung": ["Gameplay Programmer", "Frontend Developer", "Backend Developer", "Engine / Tools Programmer"],
+                "Grafik & Audio": ["2D/3D Artists", "Animator", "Technical Artist", "Sound Designer", "Composer"],
+                "Qualitätssicherung & Release": ["QA Tester", "DevOps Engineer", "Community / Social Media Manager"]
+            },
+
+            // --- DATABASE SIMULATION (LocalStorage) ---
+            db: {
+                getUsers: function() { return JSON.parse(localStorage.getItem('roonic_users') || '[]'); },
+                saveUser: function(user) {
+                    const users = this.getUsers();
+                    users.push(user);
+                    localStorage.setItem('roonic_users', JSON.stringify(users));
+                },
+                updateUser: function(updatedUser) {
+                    const users = this.getUsers();
+                    const index = users.findIndex(u => u.accountId === updatedUser.accountId);
+                    if (index !== -1) {
+                        users[index] = updatedUser;
+                        localStorage.setItem('roonic_users', JSON.stringify(users));
+                        if(app.state.currentUser && app.state.currentUser.accountId === updatedUser.accountId) {
+                            app.state.currentUser = updatedUser;
+                        }
+                    }
+                },
+                deleteUser: function(accountId) {
+                    const users = this.getUsers().filter(u => u.accountId !== accountId);
+                    localStorage.setItem('roonic_users', JSON.stringify(users));
+                },
+                findUser: function(email) { return this.getUsers().find(u => u.email === email); },
+
+                // Waitlist
+                getWaitlist: function() { return JSON.parse(localStorage.getItem('whitelist_request_moontic') || '[]'); },
+                saveWaitlistRequest: function(data) {
+                    const list = this.getWaitlist();
+                    list.push(data);
+                    localStorage.setItem('whitelist_request_moontic', JSON.stringify(list));
+                },
+                updateWaitlist: function(newList) { localStorage.setItem('whitelist_request_moontic', JSON.stringify(newList)); },
+
+                // Applications
+                getApplications: function() { return JSON.parse(localStorage.getItem('roonic_applications') || '[]'); },
+                saveApplication: function(data) {
+                    const list = this.getApplications();
+                    list.push(data);
+                    localStorage.setItem('roonic_applications', JSON.stringify(list));
+                },
+                updateApplications: function(newList) { localStorage.setItem('roonic_applications', JSON.stringify(newList)); },
+
+                // Verify Codes
+                saveVerifyCode: function(email, code) {
+                    const codes = JSON.parse(localStorage.getItem('roonic_verify_codes') || '[]');
+                    codes.push({ email, code, timestamp: Date.now() });
+                    localStorage.setItem('roonic_verify_codes', JSON.stringify(codes));
+                },
+                checkVerifyCode: function(email, code) {
+                    const codes = JSON.parse(localStorage.getItem('roonic_verify_codes') || '[]');
+                    const entry = codes.filter(c => c.email === email).pop();
+                    return entry && entry.code == code;
+                },
+
+                // Support Tickets
+                getTickets: function() { return JSON.parse(localStorage.getItem('roonic_support_tickets') || '[]'); },
+                saveTicket: function(ticket) {
+                    const list = this.getTickets();
+                    list.push(ticket);
+                    localStorage.setItem('roonic_support_tickets', JSON.stringify(list));
+                },
+                updateTickets: function(newList) { localStorage.setItem('roonic_support_tickets', JSON.stringify(newList)); }
+            },
+
+            // --- EMAIL SYSTEM ---
+            email: {
+                send: async function(to, subject, htmlContent) {
+                    const footer = `
+                        <div style="margin-top: 30px; border-top: 1px solid #334155; padding-top: 20px; text-align: center; font-family: sans-serif; color: #94a3b8; font-size: 12px;">
+                            <p style="font-weight: bold; color: #a855f7; font-size: 14px; margin-bottom: 5px;">Thanks for supporting ROONIC STUDIO's</p>
+                            <p>You have questions? Join our <a href="https://discord.gg/7kgGjHFfVY" style="color: #5865F2; text-decoration: none; font-weight: bold;">Discord</a></p>
+                        </div>
+                    `;
+
+                    console.log(`[EMAIL] Sending to: ${to}, Subject: ${subject}`);
+
+                    try {
+                        const res = await fetch('https://api.resend.com/emails', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${app.config.resendToken}`
+                            },
+                            body: JSON.stringify({
+                                from: 'Roonic Studios <onboarding@resend.dev>',
+                                to: to,
+                                subject: subject,
+                                html: `<div style="font-family: sans-serif; color: #1e293b;">${htmlContent}</div>${footer}`
+                            })
+                        });
+
+                        if (!res.ok) {
+                            const err = await res.json();
+                            console.error("Resend Error:", err);
+
+                            // Fallback: Simulate success
+                            console.log("--- EMAIL SIMULATION (API Error) ---");
+                            console.log("Content:", htmlContent);
+                            alert("Email API Error: " + (err.message || "Unknown") + "\\n\\n(Simulating success. Check Console for content)");
+                            return true;
+                        }
+                        return true;
+                    } catch (e) {
+                        console.error("Email sending failed", e);
+
+                        // Fallback: Simulate success
+                        console.log("--- EMAIL SIMULATION (Network Error) ---");
+                        console.log("Content:", htmlContent);
+                        alert("Email Network Error. (Simulating success. Check Console for content)");
+                        return true;
+                    }
+                }
+            },
+
+            // --- AUTHENTICATION LOGIC ---
+            auth: {
+                generateId: function() { return Math.random().toString(36).substring(2, 15); },
+                generateCode: function() { return Math.floor(100000 + Math.random() * 900000); },
+
+                login: function(email, password) {
+                    if (email === 'admin' && password === 'admin') {
+                        return { success: true, isAdmin: true };
+                    }
+
+                    const user = app.db.findUser(email);
+                    if (user) {
+                        if (user.password === password || (user.password === 'GOOGLE_OAUTH_USER' && password === 'GOOGLE_OAUTH_USER')) {
+                            app.state.currentUser = user;
+                            if(user.language) app.switchLang(user.language);
+                            return { success: true };
+                        }
+                    }
+                    return { success: false, message: "Ungültige E-Mail oder Passwort." };
+                },
+
+                register: async function(username, email, password, language, isGoogle = false) {
+                    if (app.db.findUser(email)) {
+                        return { success: false, message: "E-Mail bereits registriert." };
+                    }
+
+                    if (!isGoogle) {
+                        const code = this.generateCode();
+                        app.db.saveVerifyCode(email, code);
+                        const sent = await app.email.send(email, 'Dein Verifizierungscode', `<p>Hallo ${username},</p><p>Dein Code lautet: <strong style="font-size: 20px; color: #a855f7;">${code}</strong></p>`);
+                        if (!sent) return { success: false, message: "Konnte Verifizierungs-Email nicht senden." };
+                        return { success: true, requiresVerify: true, tempUser: { username, email, password, language } };
+                    }
+
+                    this.finalizeRegistration(username, email, password, language, true);
+                    return { success: true };
+                },
+
+                finalizeRegistration: function(username, email, password, language, isGoogle) {
+                    const newUser = {
+                        username: username,
+                        email: email,
+                        password: password,
+                        accountId: this.generateId(),
+                        moonticPro: false,
+                        twoFactor: false,
+                        language: language || app.state.lang
+                    };
+                    app.db.saveUser(newUser);
+                    app.state.currentUser = newUser;
+                },
+
+                handleGoogleResponse: function(response) {
+                    const responsePayload = app.auth.decodeJwt(response.credential);
+                    const email = responsePayload.email;
+                    const name = responsePayload.name;
+
+                    let user = app.db.findUser(email);
+                    if (user) {
+                        app.state.currentUser = user;
+                        if(user.language) app.switchLang(user.language);
+                    } else {
+                        app.auth.finalizeRegistration(name, email, 'GOOGLE_OAUTH_USER', app.state.lang, true);
+                    }
+                    app.closeAuthModal();
+                    app.continuePendingAction();
+                },
+
+                decodeJwt: function(token) {
+                    var base64Url = token.split('.')[1];
+                    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    return JSON.parse(jsonPayload);
+                },
+
+                logout: function() {
+                    app.state.currentUser = null;
+                    app.state.isAdmin = false;
+                    app.switchTab('projects');
+                }
+            },
+
+            // --- ADMIN PANEL ---
+            admin: {
+                getLangBadge: function(lang) {
+                    const l = lang || 'en';
+                    const color = l === 'de' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+                    return `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${color} border ml-2">${l}</span>`;
+                },
+
+                render: function() {
+                    const tab = app.state.adminTab;
+                    const nav = `
+                        <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+                            <div class="flex gap-4">
+                                <button onclick="app.state.adminTab='dashboard'; app.renderContent()" class="${tab==='dashboard'?'text-purple-400 font-bold':'text-slate-400 hover:text-white'}">Dashboard</button>
+                                <button onclick="app.state.adminTab='users'; app.renderContent()" class="${tab==='users'?'text-purple-400 font-bold':'text-slate-400 hover:text-white'}">User Management</button>
+                                <button onclick="app.state.adminTab='applications'; app.renderContent()" class="${tab==='applications'?'text-purple-400 font-bold':'text-slate-400 hover:text-white'}">Applications</button>
+                            </div>
+                            <div class="relative w-64">
+                                <input type="text" placeholder="Search..." value="${app.state.adminSearch}" oninput="app.state.adminSearch = this.value; app.renderContent()" class="w-full bg-slate-900 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white outline-none focus:border-purple-500">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" width="16"></i>
+                            </div>
+                        </div>
+                    `;
+
+                    let content = '';
+                    if(tab === 'dashboard') content = this.renderDashboard();
+                    else if(tab === 'users') content = this.renderUsers();
+                    else if(tab === 'applications') content = this.renderApplications();
+
+                    return `
+                        <div class="pt-20 px-4 max-w-6xl mx-auto pb-20 animate-fade-in">
+                            <h1 class="text-4xl font-bold text-white mb-2">Admin Panel</h1>
+                            <p class="text-slate-400 mb-8">System Overview & Management</p>
+                            ${nav}
+                            ${content}
+                        </div>
+                    `;
+                },
+
+                renderDashboard: function() {
+                    const term = app.state.adminSearch.toLowerCase();
+
+                    const waitlist = app.db.getWaitlist().filter(r =>
+                        r.realname.toLowerCase().includes(term) ||
+                        r.discord.toLowerCase().includes(term) ||
+                        r.project.toLowerCase().includes(term)
+                    );
+
+                    const tickets = app.db.getTickets().filter(t =>
+                        t.user.toLowerCase().includes(term) ||
+                        t.product.toLowerCase().includes(term) ||
+                        t.desc.toLowerCase().includes(term)
+                    );
+
+                    const apps = app.db.getApplications();
+                    const userCount = app.db.getUsers().length;
+
+                    const waitlistHtml = waitlist.length === 0 ? '<p class="text-slate-500">Keine Anfragen.</p>' : waitlist.map((req, idx) => `
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-white/5 mb-4 flex flex-col gap-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-bold text-white text-lg flex items-center">${req.project} ${this.getLangBadge(req.language)}</div>
+                                    <div class="text-sm text-slate-400">${req.realname} | ${req.discord}</div>
+                                </div>
+                                <div class="text-xs text-slate-500">${new Date(req.timestamp).toLocaleDateString()}</div>
+                            </div>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="app.admin.viewWaitlistDetails(${idx})" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"><i data-lucide="eye" width="16"></i> Details</button>
+                                <button onclick="app.admin.acceptWaitlist(${idx})" class="flex-1 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"><i data-lucide="check" width="16"></i> Accept</button>
+                                <button onclick="app.admin.openDeclineModal('waitlist', ${idx})" class="flex-1 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"><i data-lucide="x" width="16"></i> Decline</button>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    const ticketsHtml = tickets.length === 0 ? '<p class="text-slate-500">Keine Tickets.</p>' : tickets.map((t, idx) => `
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-white/5 mb-4">
+                            <div class="flex justify-between mb-2">
+                                <span class="font-bold text-white">${t.product}</span>
+                                <span class="text-xs text-slate-500 flex items-center">${t.user} ${this.getLangBadge(t.language)}</span>
+                            </div>
+                            <p class="text-sm text-slate-300 mb-4 bg-black/20 p-2 rounded">${t.desc}</p>
+                            <div class="flex gap-2">
+                                <input type="text" id="ticket-reply-${idx}" placeholder="Antwort..." class="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 text-sm text-white">
+                                <button onclick="app.admin.replyTicket(${idx})" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold">Reply</button>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    return `
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                            <div class="glass-panel p-6 rounded-2xl text-center">
+                                <div class="text-3xl font-bold text-white">${userCount}</div>
+                                <div class="text-sm text-slate-500 uppercase">Total Users</div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl text-center">
+                                <div class="text-3xl font-bold text-white">${waitlist.length}</div>
+                                <div class="text-sm text-slate-500 uppercase">Pending Waitlist</div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl text-center">
+                                <div class="text-3xl font-bold text-white">${apps.length}</div>
+                                <div class="text-sm text-slate-500 uppercase">Applications</div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl text-center">
+                                <div class="text-3xl font-bold text-white">${tickets.length}</div>
+                                <div class="text-sm text-slate-500 uppercase">Open Tickets</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="glass-panel p-6 rounded-2xl">
+                                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i data-lucide="list"></i> Waitlist Requests</h2>
+                                <div class="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">${waitlistHtml}</div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl">
+                                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i data-lucide="life-buoy"></i> Support Tickets</h2>
+                                <div class="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">${ticketsHtml}</div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                renderUsers: function() {
+                    const term = app.state.adminSearch.toLowerCase();
+                    const users = app.db.getUsers().filter(u =>
+                        u.username.toLowerCase().includes(term) ||
+                        u.email.toLowerCase().includes(term) ||
+                        u.accountId.toLowerCase().includes(term)
+                    );
+
+                    const rows = users.map(u => `
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <td class="p-4 text-sm font-mono text-slate-400">${u.accountId}</td>
+                            <td class="p-4 text-white font-bold flex items-center">${u.username} ${this.getLangBadge(u.language)}</td>
+                            <td class="p-4 text-slate-300">${u.email}</td>
+                            <td class="p-4 text-slate-400">${u.language || 'de'}</td>
+                            <td class="p-4 flex gap-2">
+                                <button onclick="app.admin.editUser('${u.accountId}')" class="text-purple-400 hover:text-white"><i data-lucide="edit-2" width="18"></i></button>
+                                <button onclick="app.admin.deleteUser('${u.accountId}')" class="text-red-400 hover:text-white"><i data-lucide="trash-2" width="18"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+
+                    return `
+                        <div class="glass-panel rounded-2xl overflow-hidden">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-900/50 text-xs uppercase text-slate-500">
+                                    <tr>
+                                        <th class="p-4">ID</th>
+                                        <th class="p-4">Username</th>
+                                        <th class="p-4">Email</th>
+                                        <th class="p-4">Lang</th>
+                                        <th class="p-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    `;
+                },
+
+                renderApplications: function() {
+                    const term = app.state.adminSearch.toLowerCase();
+                    const apps = app.db.getApplications().filter(a =>
+                        a.name.toLowerCase().includes(term) ||
+                        a.role.toLowerCase().includes(term) ||
+                        a.contact.toLowerCase().includes(term)
+                    );
+
+                    if(apps.length === 0) return '<div class="text-center text-slate-500 py-20">No pending applications.</div>';
+
+                    const rows = apps.map((a, idx) => `
+                        <div class="glass-panel p-6 rounded-2xl mb-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white flex items-center">${a.role} ${this.getLangBadge(a.language)}</h3>
+                                    <p class="text-purple-400 text-sm">${a.name} (${a.contact})</p>
+                                </div>
+                                <div class="text-xs text-slate-500">${new Date(a.timestamp).toLocaleDateString()}</div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div class="bg-slate-900/50 p-4 rounded-xl">
+                                    <div class="text-xs text-slate-500 uppercase mb-1">Portfolio</div>
+                                    <div class="text-slate-300 text-sm break-all">${a.portfolio}</div>
+                                </div>
+                                <div class="bg-slate-900/50 p-4 rounded-xl">
+                                    <div class="text-xs text-slate-500 uppercase mb-1">Motivation</div>
+                                    <div class="text-slate-300 text-sm max-h-32 overflow-y-auto custom-scrollbar">${a.motivation}</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <button onclick="app.admin.acceptApplication(${idx})" class="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold transition flex items-center gap-2"><i data-lucide="check"></i> Accept</button>
+                                <button onclick="app.admin.openDeclineModal('application', ${idx})" class="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-bold transition flex items-center gap-2"><i data-lucide="x"></i> Decline</button>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    return `<div class="space-y-6">${rows}</div>`;
+                },
+
+                editUser: function(id) {
+                    const user = app.db.getUsers().find(u => u.accountId === id);
+                    if(!user) return;
+                    const html = `
+                        <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                            <div class="glass-panel w-full max-w-md rounded-3xl p-8 relative">
+                                <button onclick="document.getElementById('modal-layer').innerHTML=''" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+                                <h2 class="text-2xl font-bold text-white mb-6">Edit User</h2>
+                                <form onsubmit="app.admin.saveUserEdit(event, '${id}')" class="space-y-4">
+                                    <input type="text" id="edit-username" value="${user.username}" class="w-full p-3 rounded-xl input-field text-white">
+                                    <input type="email" id="edit-email" value="${user.email}" class="w-full p-3 rounded-xl input-field text-white">
+                                    <input type="text" id="edit-password" value="${user.password}" class="w-full p-3 rounded-xl input-field text-white" placeholder="Password">
+                                    <button type="submit" class="w-full py-4 rounded-xl bg-purple-600 text-white font-bold transition hover:bg-purple-500">Save Changes</button>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('modal-layer').innerHTML = html;
+                    lucide.createIcons();
+                },
+
+                saveUserEdit: function(e, id) {
+                    e.preventDefault();
+                    const user = app.db.getUsers().find(u => u.accountId === id);
+                    user.username = document.getElementById('edit-username').value;
+                    user.email = document.getElementById('edit-email').value;
+                    user.password = document.getElementById('edit-password').value;
+                    app.db.updateUser(user);
+                    document.getElementById('modal-layer').innerHTML = '';
+                    app.renderContent();
+                },
+
+                deleteUser: function(id) {
+                    if(confirm("Are you sure you want to delete this user?")) {
+                        app.db.deleteUser(id);
+                        app.renderContent();
+                    }
+                },
+
+                viewWaitlistDetails: function(idx) {
+                    const list = app.db.getWaitlist();
+                    const req = list[idx];
+                    const user = app.db.getUsers().find(u => u.accountId === req.userId);
+                    const email = user ? user.email : "Unbekannt";
+
+                    const html = `
+                        <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                            <div class="glass-panel w-full max-w-lg rounded-3xl p-8 relative">
+                                <button onclick="document.getElementById('modal-layer').innerHTML=''" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+                                <h2 class="text-2xl font-bold text-white mb-6">Request Details</h2>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="bg-slate-900/50 p-3 rounded-lg"><div class="text-xs text-slate-500 uppercase">Projekt</div><div class="text-white font-bold">${req.project}</div></div>
+                                        <div class="bg-slate-900/50 p-3 rounded-lg"><div class="text-xs text-slate-500 uppercase">Account ID</div><div class="text-white font-mono text-xs">${req.userId}</div></div>
+                                    </div>
+                                    <div class="bg-slate-900/50 p-3 rounded-lg"><div class="text-xs text-slate-500 uppercase">Name</div><div class="text-white">${req.realname}</div></div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="bg-slate-900/50 p-3 rounded-lg"><div class="text-xs text-slate-500 uppercase">Discord</div><div class="text-white">${req.discord}</div></div>
+                                        <div class="bg-slate-900/50 p-3 rounded-lg"><div class="text-xs text-slate-500 uppercase">Email</div><div class="text-white text-sm truncate">${email}</div></div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="bg-slate-900/50 p-3 rounded-lg"><div class="text-xs text-slate-500 uppercase">Alter</div><div class="text-white">${req.age}</div></div>
+                                        <div class="bg-slate-900/50 p-3 rounded-lg"><div class="text-xs text-slate-500 uppercase">Land</div><div class="text-white">${req.country}</div></div>
+                                    </div>
+                                    <div class="bg-slate-900/50 p-3 rounded-lg">
+                                        <div class="text-xs text-slate-500 uppercase mb-1">Grund</div>
+                                        <div class="text-slate-300 text-sm leading-relaxed">${req.reason}</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-4 mt-6">
+                                    <button onclick="app.admin.acceptWaitlist(${idx}); document.getElementById('modal-layer').innerHTML=''" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-bold transition">Accept</button>
+                                    <button onclick="app.admin.declineWaitlist(${idx}); document.getElementById('modal-layer').innerHTML=''" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition">Decline</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('modal-layer').innerHTML = html;
+                    lucide.createIcons();
+                },
+
+                acceptWaitlist: async function(idx) {
+                    const list = app.db.getWaitlist();
+                    const req = list[idx];
+                    const user = app.db.getUsers().find(u => u.accountId === req.userId);
+                    const email = user ? user.email : "unknown";
+
+                    if(email !== "unknown") {
+                        await app.email.send(email, `Waitlist Accepted: ${req.project}`, `
+                            <h2>Glückwunsch!</h2>
+                            <p>Du wurdest für <strong>${req.project}</strong> angenommen.</p>
+                            <p>Hier ist dein Download-Link:</p>
+                            <a href="https://download/moontic" style="display:inline-block; background:#a855f7; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold;">Download Now</a>
+                            <br><br>
+                            <p style="color: #ef4444; font-weight: bold; border: 1px solid #ef4444; padding: 10px; border-radius: 5px; background-color: #fef2f2;">
+                                ⚠️ WARNING: Do not share this link or the program with anyone. Sharing will result in an immediate ban.
+                            </p>
+                        `);
+                    }
+
+                    list.splice(idx, 1);
+                    app.db.updateWaitlist(list);
+                    app.renderContent();
+                },
+
+                openDeclineModal: function(type, idx) {
+                    const html = `
+                        <div class="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                            <div class="glass-panel w-full max-w-md rounded-3xl p-8 relative">
+                                <button onclick="document.getElementById('modal-layer').innerHTML=''" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+                                <h2 class="text-2xl font-bold text-white mb-4">Decline Reason</h2>
+                                <p class="text-slate-400 mb-4">Please provide a reason for declining.</p>
+                                <textarea id="decline-reason" rows="4" class="w-full p-3 rounded-xl input-field text-white mb-4" placeholder="Reason..."></textarea>
+                                <button onclick="app.admin.submitDecline('${type}', ${idx})" class="w-full py-4 rounded-xl bg-red-600 text-white font-bold transition hover:bg-red-500">Confirm Decline</button>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('modal-layer').innerHTML = html;
+                    lucide.createIcons();
+                },
+
+                submitDecline: async function(type, idx) {
+                    const reason = document.getElementById('decline-reason').value;
+                    document.getElementById('modal-layer').innerHTML = '';
+
+                    if(type === 'waitlist') {
+                        const list = app.db.getWaitlist();
+                        const req = list[idx];
+                        const user = app.db.getUsers().find(u => u.accountId === req.userId);
+                        if(user) {
+                            await app.email.send(user.email, `Update zu deiner Waitlist Anfrage: ${req.project}`, `
+                                <h3>Hallo ${req.realname},</h3>
+                                <p>Vielen Dank für dein Interesse an <strong>${req.project}</strong>.</p>
+                                <p>Leider können wir dir zum aktuellen Zeitpunkt keinen Zugang gewähren.</p>
+                                <p><strong>Grund:</strong> ${reason}</p>
+                            `);
+                        }
+                        list.splice(idx, 1);
+                        app.db.updateWaitlist(list);
+                    } else if(type === 'application') {
+                        const list = app.db.getApplications();
+                        const appData = list[idx];
+                        const user = app.db.getUsers().find(u => u.email === appData.email); // Stored email in appData
+                        const lang = user ? user.language : 'en';
+
+                        const subject = lang === 'de' ? `Bewerbungs-Update: ${appData.role}` : `Application Update: ${appData.role}`;
+                        const body = lang === 'de' ? `
+                            <h3>Hallo ${appData.name},</h3>
+                            <p>Vielen Dank für deine Bewerbung als <strong>${appData.role}</strong>.</p>
+                            <p>Leider müssen wir dir mitteilen, dass wir deine Bewerbung abgelehnt haben.</p>
+                            <p><strong>Grund:</strong> ${reason}</p>
+                            <p>Wir wünschen dir alles Gute für deine Zukunft.</p>
+                        ` : `
+                            <h3>Hello ${appData.name},</h3>
+                            <p>Thank you for applying for the position of <strong>${appData.role}</strong>.</p>
+                            <p>Unfortunately, we have to inform you that your application has been declined.</p>
+                            <p><strong>Reason:</strong> ${reason}</p>
+                            <p>We wish you all the best for your future.</p>
+                        `;
+
+                        if(user) await app.email.send(user.email, subject, body);
+                        list.splice(idx, 1);
+                        app.db.updateApplications(list);
+                    }
+                    app.renderContent();
+                },
+
+                acceptApplication: async function(idx) {
+                    const list = app.db.getApplications();
+                    const appData = list[idx];
+                    const user = app.db.getUsers().find(u => u.email === appData.email);
+                    const lang = user ? user.language : 'en';
+
+                    const subject = lang === 'de' ? `Willkommen im Team! - Bewerbungs-Update` : `Welcome to the Team! - Application Update`;
+                    const body = lang === 'de' ? `
+                        <h3>Herzlichen Glückwunsch!</h3>
+                        <p>Du wurdest als <strong>${appData.role}</strong> bei Roonic Studios angenommen.</p>
+                        <p>Das Team war von deinem Portfolio und deiner Motivation beeindruckt.</p>
+                        <p>Um zu starten und deine Rolle zu erhalten, trete bitte unserem Discord-Server bei:</p>
+                        <a href="https://discord.gg/BJTfwmr7Gw" style="display:inline-block; background:#5865F2; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold;">Join Discord</a>
+                        <br><br>
+                        <p>Wir freuen uns auf die Zusammenarbeit!</p>
+                    ` : `
+                        <h3>Congratulations!</h3>
+                        <p>You have been accepted as <strong>${appData.role}</strong> at Roonic Studios.</p>
+                        <p>The team was impressed by your portfolio and motivation.</p>
+                        <p>To get started and receive your role, please join our Discord server:</p>
+                        <a href="https://discord.gg/BJTfwmr7Gw" style="display:inline-block; background:#5865F2; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold;">Join Discord</a>
+                        <br><br>
+                        <p>We are thrilled to have you on board!</p>
+                    `;
+
+                    if(user) await app.email.send(user.email, subject, body);
+                    list.splice(idx, 1);
+                    app.db.updateApplications(list);
+                    app.renderContent();
+                }
+            },
+
+            // --- SETTINGS VIEW ---
+            renderSettingsView: function() {
+                const u = app.state.currentUser;
+                return `
+                    <div class="pt-20 px-4 max-w-3xl mx-auto pb-20 animate-fade-in">
+                        <h1 class="text-4xl font-bold text-white mb-8">Account Settings</h1>
+
+                        <div class="glass-panel p-8 rounded-3xl mb-8">
+                            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i data-lucide="user"></i> Profile</h2>
+                            <form onsubmit="app.saveSettings(event)" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="space-y-2">
+                                        <label class="text-sm text-slate-400">Username</label>
+                                        <input type="text" id="set-username" value="${u.username}" class="w-full p-3 rounded-xl input-field text-white">
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm text-slate-400">Email</label>
+                                        <input type="email" id="set-email" value="${u.email}" class="w-full p-3 rounded-xl input-field text-white">
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm text-slate-400">Password</label>
+                                    <input type="password" id="set-password" value="${u.password}" class="w-full p-3 rounded-xl input-field text-white">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm text-slate-400">Language</label>
+                                    <select id="set-lang" class="w-full p-3 rounded-xl input-field text-white bg-slate-800">
+                                        <option value="de" ${u.language === 'de' ? 'selected' : ''}>Deutsch</option>
+                                        <option value="en" ${u.language === 'en' ? 'selected' : ''}>English</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-xl font-bold transition">Save Changes</button>
+                            </form>
+                        </div>
+
+                        <div class="glass-panel p-8 rounded-3xl">
+                            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><i data-lucide="shield"></i> Security & Status</h2>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center p-4 bg-slate-900/50 rounded-xl">
+                                    <span class="text-slate-300">Account ID</span>
+                                    <span class="font-mono text-slate-500">${u.accountId}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-slate-900/50 rounded-xl">
+                                    <span class="text-slate-300">MOONTIC Browser Pro</span>
+                                    <span class="${u.moonticPro ? 'text-green-400' : 'text-slate-500'} font-bold">${u.moonticPro ? 'Active' : 'Inactive'}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-slate-900/50 rounded-xl">
+                                    <span class="text-slate-300">2-Factor Authentication</span>
+                                    <span class="${u.twoFactor ? 'text-green-400' : 'text-slate-500'} font-bold">${u.twoFactor ? 'Enabled' : 'Disabled'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            saveSettings: function(e) {
+                e.preventDefault();
+                const u = app.state.currentUser;
+                u.username = document.getElementById('set-username').value;
+                u.email = document.getElementById('set-email').value;
+                u.password = document.getElementById('set-password').value;
+                u.language = document.getElementById('set-lang').value;
+
+                app.db.updateUser(u);
+                app.switchLang(u.language);
+                alert("Settings saved!");
+            },
+
+            // Helper to get text based on current language
+            t: function(obj) {
+                if (typeof obj === 'string') return obj;
+                return obj[this.state.lang] || obj['de'];
+            },
+
+            // Helper to calculate experience
+            getExperience: function(dateString) {
+                if (!dateString) return 'N/A';
+                const start = new Date(dateString);
+                const now = new Date();
+                let years = now.getFullYear() - start.getFullYear();
+                let months = now.getMonth() - start.getMonth();
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+                const decimal = months / 12;
+                return (years + decimal).toFixed(1) + 'y';
+            },
+
+            projects: [
+                {
+                    id: 'mc-hunt',
+                    category: 'Plugin',
+                    title: 'Advanced Hunt & Seek',
+                    featured: true,
+                    version: '1.21.11',
+                    author: 'peroonic',
+                    customer: 'TorraP',
+                    desc: {
+                        de: 'Das ultimative Hideandseek-Plugin mit GUI, Stats-System, Kompass-Tracker und Auto-World-Reset.',
+                        en: 'The ultimate Hideandseek plugin with GUI, stats system, compass tracker and auto world reset.'
+                    },
+                    fullDesc: {
+                        de: `
+                            <div class="space-y-6">
+                                <div class="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                                    <i data-lucide="alert-triangle" width="18"></i> <span>Status: Benötigt zwingend ein Resource Pack für alle Funktionen.</span>
+                                </div>
+                                <p class="text-slate-300 leading-relaxed">Ein vollautomatisches Manhunt/Fangen-Event-Plugin mit GUI und Statistiken. Es beinhaltet einen automatischen Spielablauf (Countdown, Rollenzuweisung), eine Herzschlag-Sound-Funktion bei Annäherung des Jägers sowie eine Glow-Mechanik für Gejagte.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-slate-800/50 p-4 rounded-xl border border-white/5">
+                                        <h4 class="font-bold text-white mb-2 flex items-center gap-2"><i data-lucide="zap" class="text-yellow-400" width="16"></i> Highlights</h4>
+                                        <ul class="text-sm text-slate-400 space-y-1">
+                                            <li>• Herzschlag-Sound bei Annäherung</li>
+                                            <li>• Glow-Mechanik für Runner</li>
+                                            <li>• Automatischer Countdown</li>
+                                            <li>• GUI-basiertes Stats-System</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>`,
+                        en: `
+                            <div class="space-y-6">
+                                <div class="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                                    <i data-lucide="alert-triangle" width="18"></i> <span>Status: Requires a Resource Pack for all functions.</span>
+                                </div>
+                                <p class="text-slate-300 leading-relaxed">A fully automatic Manhunt/Tag event plugin with GUI and statistics. It includes automatic game flow (countdown, role assignment), a heartbeat sound function when the hunter is near, and a glow mechanic for runners.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-slate-800/50 p-4 rounded-xl border border-white/5">
+                                        <h4 class="font-bold text-white mb-2 flex items-center gap-2"><i data-lucide="zap" class="text-yellow-400" width="16"></i> Highlights</h4>
+                                        <ul class="text-sm text-slate-400 space-y-1">
+                                            <li>• Heartbeat sound on approach</li>
+                                            <li>• Glow mechanic for runners</li>
+                                            <li>• Automatic countdown</li>
+                                            <li>• GUI-based stats system</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>`
+                    },
+                    images: [
+                        'https://i.imgur.com/Dh5KA7n.png',
+                        'https://i.imgur.com/gKoi1xb.png',
+                        'https://i.imgur.com/xFymzbR.png',
+                        'https://i.imgur.com/zLvrp6e.png',
+                        'https://i.imgur.com/heLC6v7.png'
+                    ],
+                    files: {
+                        plugin: 'https://drive.google.com/uc?export=download&id=1mSTtd5DDb1BeM9mwE8mgUBYHvcPdTCSF',
+                        resourcepack: 'https://drive.google.com/uc?export=download&id=1cWB23mXYujEyeOZsJ7aqdmH4-FPV32Ye'
+                    },
+                    slug: 'minecraft/plugins/Hide-and-Seek'
+                },
+                {
+                    id: 'mc-item',
+                    category: 'Plugin',
+                    title: 'Item Challenge',
+                    featured: true,
+                    version: '1.21.11',
+                    author: 'peroonic',
+                    customer: 'Allgemein',
+                    desc: {
+                        de: 'Finde das Item oder scheide aus! Ein vollautomatisches Minigame-System für Minecraft.',
+                        en: 'Find the item or be eliminated! A fully automatic minigame system for Minecraft.'
+                    },
+                    fullDesc: {
+                        de: `<p class="text-slate-300 leading-relaxed">Ein vollautomatisches Minigame-System. Das Ziel des Spiels ist es, ein bestimmtes Item innerhalb der Welt zu finden. Wer es nicht rechtzeitig findet, scheidet aus.</p>`,
+                        en: `<p class="text-slate-300 leading-relaxed">A fully automatic minigame system. The goal of the game is to find a specific item within the world. Whoever does not find it in time is eliminated.</p>`
+                    },
+                    images: [
+                        'https://i.imgur.com/SdmRnMY.png',
+                        'https://i.imgur.com/7LBpHGs.png',
+                        'https://i.imgur.com/v0wluT1.png'
+                    ],
+                    files: {
+                        plugin: 'https://drive.google.com/uc?export=download&id=1SF13ShTSOzolCV3pIM17dfEeUf60rsnB'
+                    },
+                    slug: 'minecraft/plugins/Item-Challenge'
+                },
+                {
+                    id: 'moontic', category: 'Software', title: 'MOONTIC Browser', version: 'Coming Soon',
+                    desc: {
+                        de: 'Der innovative Browser, der sich deinen Bedürfnissen anpasst.',
+                        en: 'The innovative browser that adapts to your needs.'
+                    },
+                    fullDesc: {
+                        de: `<p class="text-slate-300">MOONTIC Browser ist eine High-End-Lösung für das Web. Details folgen zum Release.</p>`,
+                        en: `<p class="text-slate-300">MOONTIC Browser is a high-end solution for the web. Details to follow at release.</p>`
+                    },
+                    images: ['https://placehold.co/1920x1080/0f172a/22d3ee?text=MOONTIC+BROWSER'],
+                    isWaitlist: true,
+                    slug: 'application/MOONTIC-Browser'
+                }
+            ],
+
+            team: [
+                {
+                    id: 'peroonic',
+                    discordId: '1169991869464322139',
+                    name: 'peroonic',
+                    role: 'Founder & Lead Dev',
+                    status: 'offline',
+                    avatar: 'https://github.com/peroonic-png.png',
+                    bio: 'Full-Stack Developer spezialisiert auf High-Performance Server-Systeme und intuitive UIs.',
+                    skills: ['Java', 'HTML', 'CSS', 'JS', 'APIs', 'MySQL', 'SQLite', 'Servermgmt', 'Python', 'C+', 'C++', 'Kotlin', 'Maven', 'Gradle'],
+                    socials: { github: 'https://github.com/peroonic-png', discord: 'https://discordapp.com/users/1169991869464322139' },
+                    stats: { projects: '12+' },
+                    codingStart: '2022-06-01'
+                },
+                {
+                    id: 'damon',
+                    discordId: '1431598809653186735',
+                    name: 'хроноЛидерсп3це (Damon)',
+                    role: 'Head Designer',
+                    status: 'offline',
+                    avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
+                    bio: 'Kreativer Kopf für 2D und 3D Design mit über einem Jahr Erfahrung.',
+                    skills: ['2D Design', '3D Modeling', 'UI/UX', 'Concept Art'],
+                    socials: { server: 'https://discord.gg/RpucdfgCm9', discord: 'https://discordapp.com/users/1431598809653186735' },
+                    stats: { projects: '5+' },
+                    codingStart: '2023-11-06'
+                }
+            ],
+
+            init: function() {
+                this.setupCursor();
+                this.setupScroll();
+                this.handleRouting();
+                this.renderNav();
+                this.renderContent();
+                lucide.createIcons();
+                this.addRevealEffect();
+                this.fetchTeamStatus();
+                window.handleGoogleCredentialResponse = this.auth.handleGoogleResponse;
+            },
+
+            fetchTeamStatus: async function() {
+                for (const member of this.team) {
+                    if (!member.discordId) continue;
+                    try {
+                        const res = await fetch(`https://api.lanyard.rest/v1/users/${member.discordId}`);
+                        const json = await res.json();
+                        if (json.success && json.data) {
+                            const { discord_status, discord_user, activities } = json.data;
+                            member.status = discord_status;
+                            if (discord_user.avatar) {
+                                member.avatar = `https://cdn.discordapp.com/avatars/${member.discordId}/${discord_user.avatar}.png?size=512`;
+                            }
+                            // Update username, keeping original as fallback
+                            member.name = discord_user.global_name || discord_user.username || member.name;
+
+                            // Find custom status and use it as bio
+                            const customStatus = activities.find(a => a.type === 4);
+                            if (customStatus && customStatus.state) {
+                                member.bio = customStatus.state;
+                            }
+
+                            if (this.state.tab === 'devs') this.renderContent();
+                        }
+                    } catch (e) { console.error('Lanyard Error:', e); }
+                }
+            },
+
+            handleRouting: function() {
+                let path = window.location.search.substring(1);
+                if (path.startsWith('/')) path = path.substring(1);
+                if (!path && sessionStorage.redirect) { path = sessionStorage.redirect; delete sessionStorage.redirect; }
+
+                if (path) {
+                    path = path.replace(/~and~/g, '&');
+                    if (path.startsWith('de/')) { this.switchLang('de'); path = path.substring(3); }
+                    else if (path.startsWith('en/')) { this.switchLang('en'); path = path.substring(3); }
+
+                    if (path === 'support') setTimeout(() => this.openSupportModal(), 500);
+                    else if (path === 'order' || path === 'bewerben' || path === 'apply') setTimeout(() => this.openApplicationModal(), 500);
+                    else if (path.startsWith('settings') || path.startsWith('account/settings')) {
+                        this.state.tab = 'settings';
+                    }
+                    else if (path.startsWith('projekt/') || path.startsWith('project/')) {
+                        const slugPart = path.replace(/^proje[ck]t\//, '');
+                        const project = this.projects.find(p => p.slug === slugPart || p.id === slugPart);
+                        if (project) this.state.activeProject = project;
+                    } else if (path.startsWith('team/') || path.startsWith('dev/')) {
+                        const devId = path.replace(/^team\/|^dev\//, '');
+                        this.state.tab = 'devs';
+                        setTimeout(() => this.openDevModal(devId), 500);
+                    }
+                }
+            },
+
+            setupCursor: function() {
+                const c = document.getElementById('cursor');
+                document.addEventListener('mousemove', e => { c.style.left = e.clientX + 'px'; c.style.top = e.clientY + 'px'; });
+                document.addEventListener('mouseover', e => {
+                    if (e.target.closest('.interactable') || e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.tagName === 'SELECT') c.classList.add('hovered');
+                    else c.classList.remove('hovered');
+                });
+            },
+
+            setupScroll: function() {
+                window.onscroll = () => {
+                    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    const scrolled = (winScroll / height) * 100;
+                    document.getElementById('scroll-progress').style.width = scrolled + "%";
+                    this.addRevealEffect();
+                };
+            },
+
+            addRevealEffect: function() {
+                const reveals = document.querySelectorAll('.reveal');
+                reveals.forEach(r => {
+                    const top = r.getBoundingClientRect().top;
+                    if (top < window.innerHeight - 100) r.classList.add('active');
+                });
+            },
+
+            switchTab: function(tab) {
+                this.state.tab = tab;
+                this.state.activeProject = null;
+                this.renderNav();
+                this.renderContent();
+                window.scrollTo(0,0);
+                let newPath = window.location.pathname;
+                if (tab === 'devs') newPath += '?team';
+                else if (tab === 'settings') newPath += '?settings';
+                else if (tab === 'admin') newPath += '?admin';
+                history.pushState(null, null, newPath);
+            },
+
+            switchLang: function(lang) {
+                this.state.lang = lang;
+                this.state.supportLang = lang;
+                document.documentElement.lang = lang;
+                this.renderNav();
+                this.renderContent();
+            },
+
+            renderNav: function() {
+                const tabs = [
+                    { id: 'projects', icon: 'folder', label: this.state.lang === 'de' ? 'Projekte' : 'Projects' },
+                    { id: 'devs', icon: 'users', label: 'Team' },
+                ];
+                const html = tabs.map(t => `
+                    <button onclick="app.switchTab('${t.id}')"
+                        class="px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-all interactable ${this.state.tab === t.id ? 'text-white bg-white/10' : 'text-slate-400 hover:text-white'}">
+                        <i data-lucide="${t.icon}" width="16"></i> ${t.label}
+                    </button>
+                `).join('');
+
+                const langButton = `
+                    <button onclick="app.switchLang('${this.state.lang === 'de' ? 'en' : 'de'}')" class="ml-4 px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition interactable border border-white/5">
+                        ${this.state.lang.toUpperCase()}
+                    </button>
+                `;
+
+                let userBtn = '';
+                if (this.state.isAdmin) {
+                    userBtn = `<button onclick="app.switchTab('admin')" class="ml-4 flex items-center gap-2 text-sm text-red-400 border border-red-500/30 px-3 py-2 rounded-lg bg-slate-900 interactable"><i data-lucide="shield"></i> Admin</button>`;
+                } else if (this.state.currentUser) {
+                    userBtn = `
+                        <div class="relative group ml-4">
+                            <button class="flex items-center gap-2 text-sm text-purple-400 border border-purple-500/30 px-3 py-2 rounded-lg bg-slate-900 interactable">
+                                <i data-lucide="user"></i> ${this.state.currentUser.username}
+                            </button>
+                            <div class="dropdown-menu absolute right-0 mt-2 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+                                <button onclick="app.switchTab('settings')" class="w-full text-left px-4 py-3 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition flex items-center gap-2"><i data-lucide="settings" width="16"></i> Settings</button>
+                                <button onclick="app.auth.logout()" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition flex items-center gap-2"><i data-lucide="log-out" width="16"></i> Logout</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    userBtn = `<button onclick="app.openAuthModal()" class="ml-4 flex items-center gap-2 text-sm text-white bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg transition interactable">Anmelden</button>`;
+                }
+
+                document.getElementById('desktop-nav').innerHTML = html + langButton + userBtn + `
+                    <button onclick="app.openApplicationModal()" class="ml-4 px-5 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition transform hover:-translate-y-0.5 interactable">
+                        ${this.state.lang === 'de' ? 'Bewerben' : 'Apply'}
+                    </button>
+                `;
+            },
+
+            renderContent: function() {
+                const container = document.getElementById('app-content');
+                if(this.state.tab === 'admin' && this.state.isAdmin) {
+                    container.innerHTML = this.admin.render();
+                } else if(this.state.tab === 'settings' && this.state.currentUser) {
+                    container.innerHTML = this.renderSettingsView();
+                } else if(this.state.activeProject) {
+                    container.innerHTML = this.renderProjectDetail(this.state.activeProject);
+                } else if(this.state.tab === 'projects') {
+                    container.innerHTML = this.renderProjectsView();
+                    VanillaTilt.init(document.querySelectorAll(".project-card"), { max: 5, speed: 400, glare: true, "max-glare": 0.2 });
+                } else if(this.state.tab === 'devs') {
+                    container.innerHTML = this.renderTeamView();
+                }
+                lucide.createIcons();
+                this.addRevealEffect();
+            },
+
+            renderProjectsView: function() {
+                const filtered = this.projects.filter(p => p.title.toLowerCase().includes(this.state.search.toLowerCase()));
+                const cards = filtered.map(p => this.createProjectCard(p)).join('');
+                const title = this.state.lang === 'de' ? 'Vision <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500">Unleashed</span>' : 'Vision <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500">Unleashed</span>';
+                const subtitle = this.state.lang === 'de' ? 'High-Performance Plugins & Next-Gen Software.' : 'High-Performance Plugins & Next-Gen Software.';
+                const searchPlaceholder = this.state.lang === 'de' ? 'Suche...' : 'Search...';
+
+                return `
+                    <div class="pt-20 px-4 max-w-7xl mx-auto">
+                        <div class="text-center mb-16 reveal">
+                            <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight tracking-tight tracking-tight uppercase">${title}</h1>
+                            <p class="text-slate-400 text-lg max-w-2xl mx-auto">${subtitle}</p>
+                        </div>
+                        <div class="relative max-w-xl mx-auto mb-12 reveal">
+                            <input type="text" placeholder="${searchPlaceholder}" oninput="app.state.search = this.value; app.renderContent()"
+                                class="w-full bg-[#1e293b]/50 border border-white/10 rounded-full py-4 pl-12 pr-6 text-white outline-none backdrop-blur-md">
+                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" width="20"></i>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
+                            ${cards}
+                        </div>
+                    </div>
+                `;
+            },
+
+            createProjectCard: function(p) {
+                 return `
+                    <div onclick="app.openProject('${p.id}')" class="project-card bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-2xl transition-all duration-500 reveal h-full flex flex-col">
+                        <div class="h-48 bg-slate-900 relative">
+                            <img src="${p.images[0]}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col">
+                            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-purple-400 transition">${p.title}</h3>
+                            <p class="text-slate-400 text-sm line-clamp-2">${this.t(p.desc)}</p>
+                            <div class="mt-auto pt-4 flex justify-between items-center text-xs text-slate-500">
+                                <span>v${p.version}</span>
+                                <span class="text-purple-400 font-bold">Details <i data-lucide="arrow-right" class="inline" width="12"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                 `;
+            },
+
+            openProject: function(id) {
+                this.state.activeProject = this.projects.find(p => p.id === id);
+                this.renderContent();
+                if(this.state.activeProject.slug) {
+                    const prefix = this.state.lang === 'en' ? 'en/project/' : 'projekt/';
+                    const newPath = window.location.pathname + '?' + prefix + this.state.activeProject.slug;
+                    history.pushState(null, null, newPath);
+                }
+            },
+
+            downloadFile: function(target) {
+                if (target.startsWith('http')) { window.open(target, "_blank"); return; }
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = "#";
+                a.download = target;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            },
+
+            renderProjectDetail: function(p) {
+                 const imagesHtml = p.images.map(img => `<div class="gallery-item"><img src="${img}" class="w-full h-48 object-cover"></div>`).join('');
+                 let actionButtons = p.isWaitlist ? `<button onclick="app.openWaitlistModal('${p.title}')" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-4 rounded-xl font-bold transition flex items-center gap-2 interactable shadow-xl"><i data-lucide="users"></i> Join Waitlist</button>` : `
+                        <div class="flex flex-wrap gap-4">
+                            <button onclick="app.downloadFile('${p.files.plugin}')" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-4 rounded-xl font-bold transition flex items-center gap-2 shadow-xl"><i data-lucide="download"></i> Download .jar</button>
+                            ${p.files.resourcepack ? `<button onclick="app.downloadFile('${p.files.resourcepack}')" class="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-bold transition flex items-center gap-2 border border-white/10"><i data-lucide="package"></i> Resource Pack</button>` : ''}
+                        </div>`;
+
+                 return `
+                    <div class="pt-12 px-4 max-w-5xl mx-auto animate-fade-in pb-20">
+                        <button onclick="app.switchTab('projects')" class="mb-8 flex items-center gap-2 text-slate-400 hover:text-white transition"><i data-lucide="arrow-left"></i> ${this.state.lang === 'de' ? 'Zurück' : 'Back'}</button>
+                        <div class="glass-panel rounded-3xl overflow-hidden p-8">
+                            <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">${p.title}</h1>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                                <div class="lg:col-span-2 space-y-8">
+                                    <div class="prose prose-invert max-w-none text-slate-300">${this.t(p.fullDesc)}</div>
+                                    <div class="gallery-scroll">${imagesHtml}</div>
+                                </div>
+                                <div class="space-y-6">
+                                    <div class="bg-white/5 rounded-2xl p-6 border border-white/5">
+                                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Infos</h4>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between"><span class="text-slate-400">Status:</span><span class="text-green-400">Live</span></div>
+                                            <div class="flex justify-between"><span class="text-slate-400">Version:</span><span class="text-white">${p.version}</span></div>
+                                        </div>
+                                    </div>
+                                    ${actionButtons}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            },
+
+            // --- AUTH MODALS ---
+            openAuthModal: function(pendingAction, extraData) {
+                app.state.pendingAction = pendingAction;
+                app.state.pendingData = extraData;
+
+                const html = `
+                    <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                        <div class="glass-panel w-full max-w-md rounded-3xl p-8 relative text-center">
+                            <button onclick="app.closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+                            <h2 class="text-2xl font-bold text-white mb-4">Roonic Account</h2>
+                            <p class="text-slate-400 mb-8">Besitzt du bereits einen Roonic Studios Account?</p>
+                            <div class="space-y-4">
+                                <button onclick="app.showLogin()" class="w-full py-4 rounded-xl bg-purple-600 text-white font-bold transition hover:bg-purple-500">Ja, einloggen</button>
+                                <button onclick="app.showRegister()" class="w-full py-4 rounded-xl bg-slate-700 text-white font-bold transition hover:bg-slate-600">Nein, registrieren</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal-layer').innerHTML = html;
+                lucide.createIcons();
+            },
+
+            closeAuthModal: function() {
+                document.getElementById('modal-layer').innerHTML = '';
+            },
+
+            showLogin: function() {
+                const html = `
+                    <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                        <div class="glass-panel w-full max-w-md rounded-3xl p-8 relative">
+                            <button onclick="app.closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+                            <h2 class="text-2xl font-bold text-white mb-6 text-center">Login</h2>
+                            <form onsubmit="app.submitLogin(event)" class="space-y-4">
+                                <input type="text" id="login-email" placeholder="E-Mail / Username" required class="w-full p-3 rounded-xl input-field text-white">
+                                <input type="password" id="login-password" placeholder="Passwort" required class="w-full p-3 rounded-xl input-field text-white">
+                                <button type="submit" class="w-full py-4 rounded-xl bg-purple-600 text-white font-bold transition hover:bg-purple-500">Einloggen</button>
+                            </form>
+                            <div class="mt-6">
+                                <div id="g_id_onload" data-client_id="${app.config.googleClientId}" data-callback="handleGoogleCredentialResponse" data-auto_prompt="false"></div>
+                                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left" data-width="100%"></div>
+                            </div>
+                            <p class="mt-4 text-center text-slate-500 text-sm cursor-pointer hover:text-white" onclick="app.showRegister()">Noch keinen Account? Registrieren</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal-layer').innerHTML = html;
+                if(window.google) google.accounts.id.renderButton(document.querySelector('.g_id_signin'), { theme: "filled_black", size: "large", width: "100%" });
+            },
+
+            showRegister: function() {
+                const html = `
+                    <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                        <div class="glass-panel w-full max-w-md rounded-3xl p-8 relative">
+                            <button onclick="app.closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+                            <h2 class="text-2xl font-bold text-white mb-6 text-center">Registrieren</h2>
+                            <form onsubmit="app.submitRegister(event)" class="space-y-4">
+                                <input type="text" id="reg-username" placeholder="Username" required class="w-full p-3 rounded-xl input-field text-white">
+                                <input type="email" id="reg-email" placeholder="E-Mail" required class="w-full p-3 rounded-xl input-field text-white">
+                                <input type="password" id="reg-password" placeholder="Passwort" required class="w-full p-3 rounded-xl input-field text-white">
+                                <select id="reg-lang" class="w-full p-3 rounded-xl input-field text-white bg-slate-800">
+                                    <option value="de">Deutsch</option>
+                                    <option value="en">English</option>
+                                </select>
+                                <button type="submit" class="w-full py-4 rounded-xl bg-purple-600 text-white font-bold transition hover:bg-purple-500">Account erstellen</button>
+                            </form>
+                            <div class="mt-6">
+                                <div id="g_id_onload" data-client_id="${app.config.googleClientId}" data-callback="handleGoogleCredentialResponse" data-auto_prompt="false"></div>
+                                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="signup_with" data-shape="rectangular" data-logo_alignment="left" data-width="100%"></div>
+                            </div>
+                            <p class="mt-4 text-center text-slate-500 text-sm cursor-pointer hover:text-white" onclick="app.showLogin()">Bereits registriert? Login</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal-layer').innerHTML = html;
+                if(window.google) google.accounts.id.renderButton(document.querySelector('.g_id_signin'), { theme: "filled_black", size: "large", width: "100%" });
+            },
+
+            showVerifyModal: function(email, tempUser, isAdmin = false) {
+                const html = `
+                    <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                        <div class="glass-panel w-full max-w-md rounded-3xl p-8 relative text-center">
+                            <h2 class="text-2xl font-bold text-white mb-4">Verifizierung</h2>
+                            <p class="text-slate-400 mb-6">Bitte gib den Code ein, der an ${isAdmin ? 'den Admin-Webhook' : email} gesendet wurde.</p>
+                            <input type="text" id="verify-code" placeholder="123456" class="w-full p-3 rounded-xl input-field text-white text-center text-2xl tracking-widest mb-4">
+                            <button onclick="app.submitVerify('${email}', ${isAdmin})" class="w-full py-4 rounded-xl bg-purple-600 text-white font-bold transition hover:bg-purple-500">Bestätigen</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal-layer').innerHTML = html;
+                app.state.tempUser = tempUser;
+            },
+
+            submitLogin: async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const pass = document.getElementById('login-password').value;
+                const result = app.auth.login(email, pass);
+
+                if (result.isAdmin) {
+                    // Admin 2FA Flow
+                    const code = app.auth.generateCode();
+                    app.db.saveVerifyCode('admin', code);
+
+                    // Send to Discord Webhook
+                    await fetch(app.webhooks.adminAuth, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: `🔐 **Admin Login Versuch**\nCode: \`${code}\`` })
+                    });
+
+                    app.showVerifyModal('admin', null, true);
+                    return;
+                }
+
+                if (result.success) {
+                    app.closeAuthModal();
+                    app.continuePendingAction();
+                } else {
+                    alert(result.message);
+                }
+            },
+
+            submitRegister: async function(e) {
+                e.preventDefault();
+                const user = document.getElementById('reg-username').value;
+                const email = document.getElementById('reg-email').value;
+                const pass = document.getElementById('reg-password').value;
+                const lang = document.getElementById('reg-lang').value;
+
+                const result = await app.auth.register(user, email, pass, lang);
+                if (result.requiresVerify) {
+                    app.showVerifyModal(email, result.tempUser);
+                } else if (result.success) {
+                    app.closeAuthModal();
+                    app.continuePendingAction();
+                } else {
+                    alert(result.message);
+                }
+            },
+
+            submitVerify: function(email, isAdmin) {
+                const code = document.getElementById('verify-code').value;
+                if (app.db.checkVerifyCode(email, code)) {
+                    if (isAdmin) {
+                        app.state.isAdmin = true;
+                        app.state.currentUser = { username: 'Admin' };
+                        app.closeAuthModal();
+                        app.switchTab('admin');
+                    } else {
+                        const t = app.state.tempUser;
+                        app.auth.finalizeRegistration(t.username, t.email, t.password, t.language, false);
+                        app.closeAuthModal();
+                        app.continuePendingAction();
+                    }
+                } else {
+                    alert("Falscher Code!");
+                }
+            },
+
+            continuePendingAction: function() {
+                app.renderNav();
+                if (app.state.pendingAction === 'waitlist') app.openWaitlistModal(app.state.pendingData);
+                else if (app.state.pendingAction === 'apply') app.openApplicationModal();
+            },
+
+            // --- WAITLIST ---
+            openWaitlistModal: function(projectName) {
+                if (!app.state.currentUser) { app.openAuthModal('waitlist', projectName); return; }
+
+                const html = `
+                    <div class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in overflow-y-auto">
+                        <div class="glass-panel w-full max-w-lg rounded-3xl p-8 relative my-8">
+                            <button onclick="document.getElementById('modal-layer').innerHTML=''" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+                            <h2 class="text-2xl font-bold text-white mb-2">Waitlist: ${projectName}</h2>
+                            <p class="text-slate-400 text-sm mb-6">Bitte vervollständige deine Angaben.</p>
+                            <form onsubmit="app.submitWaitlist(event, '${projectName}')" class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="text" id="wl-realname" placeholder="Vor- & Nachname" required class="w-full p-3 rounded-xl input-field text-white">
+                                    <input type="text" id="wl-discord" placeholder="Discord Name" required class="w-full p-3 rounded-xl input-field text-white">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="number" id="wl-age" placeholder="Alter" required class="w-full p-3 rounded-xl input-field text-white">
+                                    <input type="text" id="wl-country" placeholder="Land" required class="w-full p-3 rounded-xl input-field text-white">
+                                </div>
+                                <input type="text" id="wl-email" value="${app.state.currentUser.email}" disabled class="w-full p-3 rounded-xl input-field text-slate-400 cursor-not-allowed">
+                                <textarea id="wl-reason" placeholder="Warum möchtest du Early Access?" rows="3" class="w-full p-3 rounded-xl input-field text-white"></textarea>
+                                <button type="submit" class="w-full py-4 rounded-xl bg-purple-600 text-white font-bold transition hover:bg-purple-500">Auf die Liste setzen</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal-layer').innerHTML = html;
+                lucide.createIcons();
+            },
+
+            submitWaitlist: async function(e, projectName) {
+                e.preventDefault();
+                const realname = document.getElementById('wl-realname').value;
+                const discord = document.getElementById('wl-discord').value;
+                const age = document.getElementById('wl-age').value;
+                const country = document.getElementById('wl-country').value;
+                const reason = document.getElementById('wl-reason').value;
+
+                const requestData = {
+                    project: projectName,
+                    userId: app.state.currentUser.accountId,
+                    realname, discord, age, country, reason,
+                    language: app.state.lang,
+                    timestamp: new Date().toISOString()
+                };
+                app.db.saveWaitlistRequest(requestData);
+
+                await fetch(this.webhooks.waitlist, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `📢 **Neue Waitlist-Anmeldung!**\nProjekt: ${projectName}\nUser: ${app.state.currentUser.username} (${discord})`,
+                        embeds: [{
+                            title: "Waitlist Beitritt",
+                            fields: [
+                                { name: "Projekt", value: projectName, inline: true },
+                                { name: "User", value: app.state.currentUser.username, inline: true },
+                                { name: "Discord", value: discord, inline: true },
+                                { name: "Name", value: realname, inline: true },
+                                { name: "Alter/Land", value: `${age} / ${country}`, inline: true },
+                                { name: "Grund", value: reason || "Keine Angabe" }
+                            ]
+                        }]
+                    })
+                });
+
+                document.getElementById('modal-layer').innerHTML = `<div class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in"><div class="glass-panel p-8 text-center rounded-3xl">🎉 ${this.state.lang === 'de' ? 'Erfolgreich eingetragen!' : 'Successfully joined!'}</div></div>`;
+                setTimeout(() => document.getElementById('modal-layer').innerHTML = '', 2000);
+            },
+
+            // Team View
+            renderTeamView: function() {
+                const devs = this.team.map(d => `
+                    <div class="glass-panel p-8 rounded-3xl text-center relative overflow-hidden group hover:-translate-y-2 transition duration-500 interactable cursor-pointer" onclick="app.openDevModal('${d.id}')">
+                        <div class="absolute top-4 right-4 flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                            <div class="status-dot status-${d.status}"></div>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider">${d.status}</span>
+                        </div>
+                        <div class="w-32 h-32 mx-auto rounded-full p-1 bg-gradient-to-br from-purple-500 to-indigo-500 mb-6 shadow-xl shadow-purple-900/30">
+                            <img src="${d.avatar}" class="w-full h-full rounded-full object-cover border-4 border-[#1e293b] bg-slate-800">
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2">${d.name}</h3>
+                        <p class="text-purple-400 font-medium text-sm uppercase tracking-widest mb-6">${d.role}</p>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="pt-20 px-4 max-w-7xl mx-auto pb-20">
+                        <div class="text-center mb-16 reveal">
+                            <h2 class="text-4xl font-bold text-white mb-4">Das Team</h2>
+                            <p class="text-slate-400">Die kreativen Köpfe hinter der Technik.</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                            ${devs}
+                            <div class="border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center p-8 text-slate-500 hover:border-purple-500/50 hover:text-purple-400 transition cursor-pointer interactable" onclick="app.openApplicationModal()">
+                                <i data-lucide="plus" width="48" class="mb-4"></i>
+                                <span class="font-bold">Bewirb dich jetzt</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            openDevModal: function(id) {
+                const d = this.team.find(x => x.id === id);
+                if (!d) return;
+                const skillsHtml = d.skills.map(s => `<span class="px-3 py-1 bg-slate-800 rounded-full text-xs text-slate-300 border border-white/5">${s}</span>`).join('');
+                const experience = d.codingStart ? this.getExperience(d.codingStart) : 'N/A';
+
+                let socialsHtml = '';
+                if (d.socials.github) {
+                    socialsHtml += `<a href="${d.socials.github}" target="_blank" class="bg-[#24292e] hover:bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition interactable"><i data-lucide="github" width="18"></i> GitHub</a>`;
+                }
+                if (d.socials.server) {
+                    socialsHtml += `<a href="${d.socials.server}" target="_blank" class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition interactable"><i data-lucide="server" width="18"></i> Discord Server</a>`;
+                }
+                if (d.socials.discord) {
+                    socialsHtml += `<a href="${d.socials.discord}" target="_blank" class="bg-[#5865F2] hover:bg-[#4752c4] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition interactable"><i data-lucide="message-circle" width="18"></i> Discord</a>`;
+                }
+
+                const html = `
+                    <div class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                        <div class="glass-panel w-full max-w-2xl rounded-2xl p-8 relative">
+                            <button onclick="document.getElementById('modal-layer').innerHTML=''" class="absolute top-4 right-4 text-slate-500 hover:text-white interactable"><i data-lucide="x"></i></button>
+                            <div class="flex flex-col md:flex-row gap-8 items-center md:items-start mb-8">
+                                <div class="w-32 h-32 rounded-full p-1 bg-gradient-to-br from-purple-500 to-indigo-500 shadow-xl shrink-0">
+                                    <img src="${d.avatar}" class="w-full h-full rounded-full object-cover border-4 border-[#1e293b] bg-slate-800">
+                                </div>
+                                <div class="text-center md:text-left">
+                                    <h2 class="text-3xl font-bold text-white mb-1">${d.name}</h2>
+                                    <p class="text-purple-400 font-medium text-sm uppercase tracking-widest mb-2">${d.role}</p>
+                                    <div class="flex items-center justify-center md:justify-start gap-2 mb-4">
+                                        <div class="status-dot status-${d.status}"></div>
+                                        <span class="text-sm font-bold text-white uppercase tracking-wider">${d.status}</span>
+                                    </div>
+                                    <p class="text-slate-300 text-sm leading-relaxed max-w-md">${d.bio}</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-8">
+                                <div class="bg-slate-800/50 p-4 rounded-xl text-center border border-white/5">
+                                    <div class="text-2xl font-bold text-white">${d.stats.projects}</div>
+                                    <div class="text-xs text-slate-500 uppercase tracking-wider">Projekte</div>
+                                </div>
+                                <div class="bg-slate-800/50 p-4 rounded-xl text-center border border-white/5">
+                                    <div class="text-2xl font-bold text-white">${experience}</div>
+                                    <div class="text-xs text-slate-500 uppercase tracking-wider">Erfahrung</div>
+                                </div>
+                            </div>
+                            <div class="mb-8">
+                                <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Tech Stack</h3>
+                                <div class="flex flex-wrap gap-2">${skillsHtml}</div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                ${socialsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal-layer').innerHTML = html;
+                lucide.createIcons();
+            },
+
+            // SUPPORT MODAL
+            openSupportModal: function() {
+                const strings = i18n[this.state.supportLang];
+                const html = `
+                    <div class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in overflow-y-auto">
+                        <div class="glass-panel w-full max-w-3xl rounded-3xl p-6 md:p-10 shadow-2xl relative my-8">
+                            <button onclick="document.getElementById('modal-layer').innerHTML=''" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+
+                            <div id="success-message" class="hidden text-center py-10">
+                                <div class="bg-green-500/10 text-green-400 p-4 rounded-xl mb-6 inline-block"><i data-lucide="check-circle" size="48"></i></div>
+                                <h2 class="text-2xl font-bold mb-2">${strings.success_title}</h2>
+                                <p class="text-slate-400">${strings.success_body}</p>
+                            </div>
+
+                            <div id="support-form-container">
+                                <header class="text-center mb-10">
+                                    <h1 class="text-3xl font-extrabold tracking-tight mb-2">ROONIC <span class="text-purple-500">SUPPORT</span></h1>
+                                    <p class="text-slate-400 text-lg">${strings.header_subtitle}</p>
+                                </header>
+
+                                <form id="support-form" class="space-y-6" onsubmit="app.submitSupport(event)">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-semibold text-slate-300">${strings.label_contact}</label>
+                                            <input type="text" id="contact" required placeholder="peroonic#0001" class="w-full p-3 rounded-xl input-field text-white">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-semibold text-slate-300">${strings.label_product}</label>
+                                            <select id="product" required class="w-full p-3 rounded-xl input-field text-white bg-slate-800 appearance-none">
+                                                <option value="" disabled selected>${strings.opt_product_placeholder}</option>
+                                                <option value="Minecraft Plugins">Minecraft Plugins</option>
+                                                <option value="MOONTIC Browser">MOONTIC Browser</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-semibold text-slate-300">${strings.label_device}</label>
+                                            <select id="device" required class="w-full p-3 rounded-xl input-field text-white bg-slate-800">
+                                                <option value="PC (Windows)">PC (Windows)</option><option value="PC (Linux)">PC (Linux)</option><option value="Mac">Mac</option>
+                                            </select>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-semibold text-slate-300">${strings.label_category}</label>
+                                            <select id="category" required class="w-full p-3 rounded-xl input-field text-white bg-slate-800">
+                                                <option value="Bug Report">Bug Report</option><option value="Billing">Zahlung/Billing</option><option value="Account">Account</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-semibold text-slate-300">${strings.label_description}</label>
+                                        <textarea id="description" required rows="4" class="w-full p-3 rounded-xl input-field text-white resize-none"></textarea>
+                                    </div>
+                                    <button type="submit" id="submit-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg flex items-center justify-center gap-2">
+                                        <span>${strings.btn_submit}</span> <i data-lucide="send" width="16"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal-layer').innerHTML = html;
+                lucide.createIcons();
+            },
+
+            // APPLICATION MODAL
+            openApplicationModal: function() {
+                if (!app.state.currentUser) { app.openAuthModal('apply'); return; }
+
+                const strings = i18n[this.state.lang];
+                let roleOptions = '';
+                for (const [category, roles] of Object.entries(this.roles)) {
+                    roleOptions += `<optgroup label="${category}">`;
+                    roles.forEach(role => { roleOptions += `<option value="${role}">${role}</option>`; });
+                    roleOptions += `</optgroup>`;
+                }
+
+                const html = `
+                    <div class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in overflow-y-auto">
+                        <div class="glass-panel w-full max-w-3xl rounded-3xl p-6 md:p-10 shadow-2xl relative my-8">
+                            <button onclick="document.getElementById('modal-layer').innerHTML=''" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+
+                            <div id="app-success-message" class="hidden text-center py-10">
+                                <div class="bg-green-500/10 text-green-400 p-4 rounded-xl mb-6 inline-block"><i data-lucide="check-circle" size="48"></i></div>
+                                <h2 class="text-2xl font-bold mb-2">${strings.app_success_title}</h2>
+                                <p class="text-slate-400">${strings.app_success_body}</p>
+                            </div>
+
+                            <div id="application-form-container">
+                                <header class="text-center mb-10">
+                                    <h1 class="text-3xl font-extrabold tracking-tight mb-2">${strings.app_title_1} <span class="text-purple-500">${strings.app_title_2}</span></h1>
+                                    <p class="text-slate-400 text-lg">${strings.app_subtitle}</p>
+                                </header>
+
+                                <form id="application-form" class="space-y-6" onsubmit="app.submitApplication(event)">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-semibold text-slate-300">${strings.label_name}</label>
+                                            <input type="text" id="app-name" required value="${app.state.currentUser.username}" class="w-full p-3 rounded-xl input-field text-white">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-semibold text-slate-300">${strings.label_contact}</label>
+                                            <input type="text" id="app-contact" required placeholder="Discord Name / ID" class="w-full p-3 rounded-xl input-field text-white">
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-semibold text-slate-300">${strings.label_role}</label>
+                                        <select id="app-role" required class="w-full p-3 rounded-xl input-field text-white bg-slate-800">
+                                            <option value="" disabled selected>${strings.opt_role_placeholder}</option>
+                                            ${roleOptions}
+                                        </select>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-semibold text-slate-300">${strings.label_portfolio}</label>
+                                        <input type="text" id="app-portfolio" placeholder="GitHub, Portfolio, Website..." class="w-full p-3 rounded-xl input-field text-white">
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-semibold text-slate-300">${strings.label_motivation}</label>
+                                        <textarea id="app-motivation" required rows="5" placeholder="${strings.ph_motivation}" class="w-full p-3 rounded-xl input-field text-white resize-none"></textarea>
+                                    </div>
+
+                                    <button type="submit" id="app-submit-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg flex items-center justify-center gap-2">
+                                        <span>${strings.btn_apply}</span> <i data-lucide="send" width="16"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal-layer').innerHTML = html;
+                lucide.createIcons();
+            },
+
+            submitApplication: async function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('app-submit-btn');
+                btn.disabled = true;
+                btn.innerText = "Senden...";
+
+                const name = document.getElementById('app-name').value;
+                const contact = document.getElementById('app-contact').value;
+                const role = document.getElementById('app-role').value;
+                const portfolio = document.getElementById('app-portfolio').value || "Keine Angabe";
+                const motivation = document.getElementById('app-motivation').value;
+
+                // Save to Local DB
+                app.db.saveApplication({
+                    name, contact, role, portfolio, motivation,
+                    email: app.state.currentUser.email,
+                    language: app.state.lang,
+                    timestamp: Date.now()
+                });
+
+                const payload = {
+                    embeds: [{
+                        title: "🚀 Neue Bewerbung eingegangen!",
+                        color: 10181046, // Purple-ish
+                        fields: [
+                            { name: "Name", value: name, inline: true },
+                            { name: "Discord", value: contact, inline: true },
+                            { name: "Rolle", value: role, inline: false },
+                            { name: "Portfolio", value: portfolio, inline: false },
+                            { name: "Motivation", value: motivation.length > 1000 ? motivation.substring(0, 1000) + "..." : motivation },
+                            { name: "Roonic Account", value: app.state.currentUser.email }
+                        ],
+                        footer: { text: "Roonic Studios Recruiting" },
+                        timestamp: new Date().toISOString()
+                    }]
+                };
+
+                await fetch(this.webhooks.application, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                document.getElementById('application-form-container').classList.add('hidden');
+                document.getElementById('app-success-message').classList.remove('hidden');
+            }
+        };
+
+        const i18n = {
+            de: {
+                header_subtitle: "Wie können wir dir heute helfen?",
+                label_contact: "Discord Name / ID",
+                label_product: "Produkt",
+                opt_product_placeholder: "Wähle ein Produkt...",
+                label_device: "Gerät",
+                label_category: "Kategorie",
+                label_description: "Beschreibung",
+                btn_submit: "Anfrage senden",
+                success_title: "Anfrage gesendet!",
+                success_body: "Wir melden uns bald bei dir.",
+
+                // Application Form
+                app_title_1: "WERDE TEIL DES",
+                app_title_2: "TEAMS",
+                app_subtitle: "Wir suchen kreative Köpfe und talentierte Entwickler.",
+                label_name: "Name / Nickname",
+                label_role: "Gewünschte Rolle",
+                opt_role_placeholder: "Wähle eine Position...",
+                label_portfolio: "Portfolio / Referenzen",
+                label_motivation: "Warum möchtest du beitreten?",
+                ph_motivation: "Erzähl uns kurz etwas über dich und deine Erfahrung...",
+                btn_apply: "Bewerbung absenden",
+                app_success_title: "Bewerbung erhalten!",
+                app_success_body: "Danke für dein Interesse. Wir schauen uns deine Unterlagen an und melden uns via Discord."
+            },
+            en: {
+                header_subtitle: "How can we help you today?",
+                label_contact: "Discord Name / ID",
+                label_product: "Product",
+                opt_product_placeholder: "Select a product...",
+                label_device: "Device",
+                label_category: "Category",
+                label_description: "Description",
+                btn_submit: "Submit Request",
+                success_title: "Request Sent!",
+                success_body: "We will get back to you soon.",
+
+                // Application Form
+                app_title_1: "JOIN THE",
+                app_title_2: "TEAM",
+                app_subtitle: "We are looking for creative minds and talented developers.",
+                label_name: "Name / Nickname",
+                label_role: "Desired Role",
+                opt_role_placeholder: "Select a position...",
+                label_portfolio: "Portfolio / References",
+                label_motivation: "Why do you want to join?",
+                ph_motivation: "Tell us briefly about yourself and your experience...",
+                btn_apply: "Submit Application",
+                app_success_title: "Application Received!",
+                app_success_body: "Thanks for your interest. We will review your application and contact you via Discord."
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
